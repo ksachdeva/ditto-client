@@ -17,7 +17,7 @@ def _create_client(user_name: str, password: str) -> DittoClient:
     return DittoClient(request_adapter)
 
 
-def create_devops_client() -> DittoClient:
+def create_ba_devops_client() -> DittoClient:
     user_name = os.getenv("DITTO_DEVOPS_USERNAME")
     password = os.getenv("DITTO_DEVOPS_PASSWORD")
 
@@ -27,7 +27,7 @@ def create_devops_client() -> DittoClient:
     return _create_client(user_name, password)
 
 
-def create_ditto_client() -> DittoClient:
+def create_ba_ditto_client() -> DittoClient:
     user_name = os.getenv("DITTO_USERNAME")
     password = os.getenv("DITTO_PASSWORD")
 

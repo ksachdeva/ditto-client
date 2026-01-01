@@ -10,7 +10,7 @@ from rich.table import Table
 from typer import Typer
 
 from ditto_client import __version__
-from ditto_client._ba_clients import create_devops_client, create_ditto_client
+from ditto_client._ba_clients import create_ba_devops_client, create_ba_ditto_client
 from ditto_client.cli._devops import devops_app
 from ditto_client.cli._permission import permission_app
 from ditto_client.cli._policy import policy_app
@@ -39,7 +39,7 @@ LOG_LEVELS = {
 def whoami() -> None:
     """Get current user information."""
 
-    client = create_ditto_client()
+    client = create_ba_ditto_client()
 
     async def _run() -> None:
         response = await client.api.two.whoami.get()
@@ -79,6 +79,6 @@ def main(
 
     # create Ditto Clients based on the command types
     if ctx.invoked_subcommand == "devops":
-        ctx.obj = create_devops_client()
+        ctx.obj = create_ba_devops_client()
     else:
-        ctx.obj = create_ditto_client()
+        ctx.obj = create_ba_ditto_client()

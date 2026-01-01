@@ -1,21 +1,24 @@
 import asyncio
 import logging
+import os
 from typing import Annotated
 
 import typer
 from dotenv import load_dotenv
+from kiota_http.httpx_request_adapter import HttpxRequestAdapter
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from typer import Typer
 
 from ditto_client import __version__
-from ditto_client._ba_clients import create_ba_devops_client, create_ba_ditto_client
+from ditto_client._basic_auth import BasicAuthProvider
 from ditto_client.cli._devops import devops_app
 from ditto_client.cli._permission import permission_app
 from ditto_client.cli._policy import policy_app
 from ditto_client.cli._search import search_app
 from ditto_client.cli._thing import thing_app
+from ditto_client.generated.ditto_client import DittoClient
 
 load_dotenv()
 cli_app = Typer(name=f"Ditto Client [{__version__}]")
@@ -35,11 +38,41 @@ LOG_LEVELS = {
 }
 
 
+def _create_client(user_name: str, password: str) -> DittoClient:
+    base_url = os.getenv("DITTO_BASE_URL", "http://host.docker.internal:8080")
+
+    auth_provider = BasicAuthProvider(user_name=user_name, password=password)
+    request_adapter = HttpxRequestAdapter(auth_provider)
+    request_adapter.base_url = base_url
+
+    return DittoClient(request_adapter)
+
+
+def _create_ba_devops_client() -> DittoClient:
+    user_name = os.getenv("DITTO_DEVOPS_USERNAME")
+    password = os.getenv("DITTO_DEVOPS_PASSWORD")
+
+    if not user_name or not password:
+        raise ValueError("Environment variables DITTO_DEVOPS_USERNAME and DITTO_DEVOPS_PASSWORD must be set.")
+
+    return _create_client(user_name, password)
+
+
+def _create_ba_ditto_client() -> DittoClient:
+    user_name = os.getenv("DITTO_USERNAME")
+    password = os.getenv("DITTO_PASSWORD")
+
+    if not user_name or not password:
+        raise ValueError("Environment variables DITTO_USERNAME and DITTO_PASSWORD must be set.")
+
+    return _create_client(user_name, password)
+
+
 @cli_app.command()
 def whoami() -> None:
     """Get current user information."""
 
-    client = create_ba_ditto_client()
+    client = _create_ba_ditto_client()
 
     async def _run() -> None:
         response = await client.api.two.whoami.get()
@@ -79,6 +112,6 @@ def main(
 
     # create Ditto Clients based on the command types
     if ctx.invoked_subcommand == "devops":
-        ctx.obj = create_ba_devops_client()
+        ctx.obj = _create_ba_devops_client()
     else:
-        ctx.obj = create_ba_ditto_client()
+        ctx.obj = _create_ba_ditto_client()

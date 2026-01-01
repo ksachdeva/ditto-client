@@ -44,16 +44,13 @@ in the library to support it. See [BasicAuth Provider](src/ditto_client/basic_au
 
 The Ditto client includes a comprehensive CLI for interacting with Eclipse Ditto services. The CLI provides the following commands:
 
-| Command Group | Description |
-|---------------|-------------|
-| `policy` | Manage access policies |
-| `thing` | Manage things (digital twins) |
-| `search` | Search for things |
-| `connection` | Manage connections |
-| `devops` | DevOps operations |
-| `permission` | Check permissions |
-| `config` | View service configuration |
-| `logging` | Manage logging configuration |
+| Command Group | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `policy`      | Manage access policies                          |
+| `thing`       | Manage things (digital twins)                   |
+| `search`      | Search for things                               |
+| `permission`  | Check permissions                               |
+| `devops`      | DevOps operations (logging, config, connection) |
 
 
 ### Global Configuration
@@ -197,34 +194,34 @@ ditto-client search count --filter 'eq(attributes/location,"Kitchen")'
 
 ```bash
 # Create a connection
-ditto-client connection create "new-connection" examples/cli-examples/connection.json
+ditto-client devops connection create "new-connection" examples/cli-examples/connection.json
 ```
 
 #### List all connections.
 
 ```bash
 # List all connections
-ditto-client connection list
+ditto-client devops connection list
 
 # List with specific fields
-ditto-client connection list --fields "id,connectionStatus"
+ditto-client devops connection list --fields "id,connectionStatus"
 ```
 
 #### Retrieve a specific connection by ID.
 
 ```bash
 # Get a connection
-ditto-client connection get "new-connection"
+ditto-client devops connection get "new-connection"
 
 # Get with specific fields
-ditto-client connection get "new-connection" --fields "id,status"
+ditto-client devops connection get "new-connection" --fields "id,status"
 ```
 
 #### Delete a connection.
 
 ```bash
 # Delete a connection
-ditto-client connection delete "new-connection"
+ditto-client devops connection delete "new-connection"
 ```
 
 ---
@@ -235,7 +232,7 @@ ditto-client connection delete "new-connection"
 
 ```bash
 # Get all configuration
-ditto-client config get
+ditto-client devops config get
 ```
 
 ---
@@ -246,17 +243,17 @@ ditto-client config get
 
 ```bash
 # Get logging configuration
-ditto-client logging get
+ditto-client devops logging get
 
 # Get module-specific config
-ditto-client logging get --module-name "gateway"
+ditto-client devops logging get --module-name "gateway"
 ```
 
 #### Update logging configuration.
 
 ```bash
 # Update logging configuration
-ditto-client logging update examples/cli-examples/logging.json
+ditto-client devops logging update examples/cli-examples/logging.json
 ```
 
 ---
@@ -272,11 +269,10 @@ ditto-client permission check examples/cli-examples/permission.json
 
 ---
 
-### DevOps Operations
 
 #### Get current user information.
 
 ```bash
 # Get current user info
-ditto-client devops whoami
+ditto-client whoami
 ```

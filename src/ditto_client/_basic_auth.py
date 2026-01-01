@@ -40,8 +40,11 @@ class BasicAuthProvider(AuthenticationProvider):
     async def authenticate_request(
         self,
         request: RequestInformation,
-        additional_authentication_context: dict[str, Any] = {},
+        additional_authentication_context: dict[str, Any] | None = None,
     ) -> None:
+        if additional_authentication_context is None:
+            additional_authentication_context = {}
+
         if not request.request_headers:
             request.headers = HeadersCollection()
 

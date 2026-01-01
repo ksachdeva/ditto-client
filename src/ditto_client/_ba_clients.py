@@ -2,11 +2,12 @@ import os
 
 from kiota_http.httpx_request_adapter import HttpxRequestAdapter
 
-from ditto_client.basic_auth import BasicAuthProvider
 from ditto_client.generated.ditto_client import DittoClient
 
+from ._basic_auth import BasicAuthProvider
 
-def create_client(user_name: str, password: str) -> DittoClient:
+
+def _create_client(user_name: str, password: str) -> DittoClient:
     base_url = os.getenv("DITTO_BASE_URL", "http://host.docker.internal:8080")
 
     auth_provider = BasicAuthProvider(user_name=user_name, password=password)
@@ -23,7 +24,7 @@ def create_devops_client() -> DittoClient:
     if not user_name or not password:
         raise ValueError("Environment variables DITTO_DEVOPS_USERNAME and DITTO_DEVOPS_PASSWORD must be set.")
 
-    return create_client(user_name, password)
+    return _create_client(user_name, password)
 
 
 def create_ditto_client() -> DittoClient:
@@ -33,4 +34,4 @@ def create_ditto_client() -> DittoClient:
     if not user_name or not password:
         raise ValueError("Environment variables DITTO_USERNAME and DITTO_PASSWORD must be set.")
 
-    return create_client(user_name, password)
+    return _create_client(user_name, password)

@@ -1,29 +1,29 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import typer
 from rich import print as rprint
 from typer import Typer
 
+from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_policy import NewPolicy
-
-from ._utils import create_ditto_client
 
 policy_app = Typer()
 
 
 @policy_app.command()
 def create(
+    ctx: typer.Context,
     policy_id: Annotated[str, typer.Argument(help="The ID of the policy to create")],
     policy_file: Annotated[Path, typer.Argument(help="Path to JSON file containing policy definition")],
 ) -> None:
     """Create a new policy."""
 
-    async def _run() -> None:
-        client = create_ditto_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         # Read the policy data
         policy_data = json.loads(policy_file.read_text())
 
@@ -43,13 +43,13 @@ def create(
 
 @policy_app.command()
 def get(
+    ctx: typer.Context,
     policy_id: Annotated[str, typer.Argument(help="The ID of the policy to retrieve")],
 ) -> None:
     """Get a specific policy by ID."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         response = await client.api.two.policies.by_policy_id(policy_id).get()
 
         if not response:
@@ -63,13 +63,13 @@ def get(
 
 @policy_app.command()
 def entries(
+    ctx: typer.Context,
     policy_id: Annotated[str, typer.Argument(help="The ID of the policy")],
 ) -> None:
     """List policy entries."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         response = await client.api.two.policies.by_policy_id(policy_id).entries.get()
 
         if not response:
@@ -83,6 +83,7 @@ def entries(
 
 @policy_app.command()
 def delete(
+    ctx: typer.Context,
     policy_id: Annotated[str, typer.Argument(help="The ID of the policy to delete")],
     confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
@@ -93,9 +94,9 @@ def delete(
             rprint("[yellow]Operation cancelled[/yellow]")
             return
 
-    async def _run() -> None:
-        client = create_ditto_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         await client.api.two.policies.by_policy_id(policy_id).delete()
         rprint(f"[green]Successfully deleted policy '{policy_id}'[/green]")
 

@@ -1,28 +1,27 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import typer
 from rich import print as rprint
 from typer import Typer
 
+from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.permission_check_request import PermissionCheckRequest
-
-from ._utils import create_ditto_client
 
 permission_app = Typer()
 
 
 @permission_app.command()
 def check(
+    ctx: typer.Context,
     request_file: Annotated[Path, typer.Argument(help="Path to JSON file containing permission check request")],
 ) -> None:
     """Check permissions on specified resources."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Read the permission check request data
         request_data = json.loads(request_file.read_text())
 

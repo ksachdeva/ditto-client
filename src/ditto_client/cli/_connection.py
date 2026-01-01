@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -14,23 +14,23 @@ from ditto_client.generated.api.two.connections.connections_request_builder impo
 from ditto_client.generated.api.two.connections.item.with_connection_item_request_builder import (
     WithConnectionItemRequestBuilder,
 )
+from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_connection import NewConnection
-
-from ._utils import create_devops_client
 
 connection_app = Typer()
 
 
 @connection_app.command()
 def create(
+    ctx: typer.Context,
     connection_id: Annotated[str, typer.Argument(help="The ID of the connection to create")],
     connection_file: Annotated[Path, typer.Argument(help="Path to connection definition")],
 ) -> None:
     """Create a new connection."""
 
-    async def _run() -> None:
-        client = create_devops_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         # Read the connection data
         connection_data = json.loads(connection_file.read_text())
 
@@ -44,6 +44,7 @@ def create(
 
 @connection_app.command()
 def list(
+    ctx: typer.Context,
     fields: Annotated[
         Optional[str],
         typer.Option(help="Comma-separated list of fields to include (e.g., 'id,connectionStatus,uri')"),
@@ -51,9 +52,9 @@ def list(
 ) -> None:
     """List connections from Ditto."""
 
-    async def _run() -> None:
-        client = create_devops_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         # Build query parameters if provided
         request_config = None
         if fields:
@@ -94,14 +95,15 @@ def list(
 
 @connection_app.command()
 def get(
+    ctx: typer.Context,
     connection_id: Annotated[str, typer.Argument(help="The ID of the connection to retrieve")],
     fields: Annotated[Optional[str], typer.Option(help="Comma-separated list of fields to include")] = None,
 ) -> None:
     """Get a specific connection by ID."""
 
-    async def _run() -> None:
-        client = create_devops_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         # Build query parameters if provided
         request_config = None
         if fields:
@@ -124,6 +126,7 @@ def get(
 
 @connection_app.command()
 def delete(
+    ctx: typer.Context,
     connection_id: Annotated[str, typer.Argument(help="The ID of the connection to delete")],
     confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
@@ -134,9 +137,9 @@ def delete(
             rprint("[yellow]Operation cancelled[/yellow]")
             return
 
-    async def _run() -> None:
-        client = create_devops_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         await client.api.two.connections.by_connection_id(connection_id).delete()
         rprint(f"[green]Successfully deleted connection '{connection_id}'[/green]")
 

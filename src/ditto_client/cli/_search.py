@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated, Optional
+from typing import Annotated, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -10,14 +10,14 @@ from typer import Typer
 
 from ditto_client.generated.api.two.search.things.count.count_request_builder import CountRequestBuilder
 from ditto_client.generated.api.two.search.things.things_request_builder import ThingsRequestBuilder
-
-from ._utils import create_ditto_client
+from ditto_client.generated.ditto_client import DittoClient
 
 search_app = Typer()
 
 
 @search_app.command()
 def query(
+    ctx: typer.Context,
     filter: Annotated[
         Optional[str], typer.Option(help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')")
     ] = None,
@@ -27,10 +27,9 @@ def query(
     timeout: Annotated[Optional[str], typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
 ) -> None:
     """Search for things in Ditto."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Build query parameters if provided
         request_config = None
         if filter or fields or namespaces or option or timeout:
@@ -75,16 +74,16 @@ def query(
 
 @search_app.command()
 def count(
+    ctx: typer.Context,
     filter: Annotated[
         Optional[str], typer.Option(help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')")
     ] = None,
     namespaces: Annotated[Optional[str], typer.Option(help="Comma-separated list of namespaces to search")] = None,
 ) -> None:
     """List things from Ditto."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Build query parameters if provided
         request_config = None
         if filter or namespaces:

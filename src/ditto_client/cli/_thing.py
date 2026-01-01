@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Optional, cast
 
 import jsonpatch
 import typer
@@ -12,25 +12,24 @@ from rich.table import Table
 from typer import Typer
 
 from ditto_client.generated.api.two.things.things_request_builder import ThingsRequestBuilder
+from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_thing import NewThing
 from ditto_client.generated.models.patch_thing import PatchThing
 from ditto_client.generated.models.thing import Thing
-
-from ._utils import create_ditto_client
 
 thing_app = Typer()
 
 
 @thing_app.command()
 def create(
+    ctx: typer.Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to create")],
     data_file: Annotated[Path, typer.Argument(help="Path to JSON file containing thing additional data")],
 ) -> None:
     """Create a new thing."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Build the thing data
         thing_data = json.loads(data_file.read_text())
 
@@ -45,6 +44,7 @@ def create(
 
 @thing_app.command()
 def list(
+    ctx: typer.Context,
     fields: Annotated[
         Optional[str],
         typer.Option(
@@ -55,10 +55,9 @@ def list(
     timeout: Annotated[Optional[str], typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
 ) -> None:
     """List things from Ditto."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Build query parameters if provided
         request_config = None
         if fields or ids or timeout:
@@ -98,14 +97,14 @@ def list(
 
 @thing_app.command()
 def get(
+    ctx: typer.Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to retrieve")],
     revision: Annotated[Optional[int], typer.Option(help="Historical revision number to retrieve")] = None,
 ) -> None:
     """Get a specific thing by ID."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Build request configuration with custom headers if revision is specified
         request_config: RequestConfiguration[Any] | None = None
         if revision is not None:
@@ -125,14 +124,14 @@ def get(
 
 @thing_app.command()
 def update(
+    ctx: typer.Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to update")],
     patch_file: Annotated[Path, typer.Argument(help="Path to JSON patch file")],
 ) -> None:
     """Update a thing using JSON patch."""
+    client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
-        client = create_ditto_client()
-
         # Read the patch data
         patch_data = json.loads(patch_file.read_text())
 
@@ -147,6 +146,7 @@ def update(
 
 @thing_app.command()
 def diff(
+    ctx: typer.Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to compare")],
     revision: Annotated[int, typer.Argument(help="Historical revision number to compare with current")],
 ) -> None:
@@ -166,9 +166,9 @@ def diff(
 
         return extracted
 
-    async def _run() -> None:
-        client = create_ditto_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         # Get current thing
         current_response = await client.api.two.things.by_thing_id(thing_id).get()
         if not current_response:
@@ -208,6 +208,7 @@ def diff(
 
 @thing_app.command()
 def delete(
+    ctx: typer.Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to delete")],
     confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
@@ -218,9 +219,9 @@ def delete(
             rprint("[yellow]Operation cancelled[/yellow]")
             return
 
-    async def _run() -> None:
-        client = create_ditto_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         await client.api.two.things.by_thing_id(thing_id).delete()
         rprint(f"[green]Successfully deleted thing '{thing_id}'[/green]")
 

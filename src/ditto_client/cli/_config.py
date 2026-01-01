@@ -1,20 +1,22 @@
 import asyncio
+from typing import cast
 
+import typer
 from rich import print as rprint
 from typer import Typer
 
-from ._utils import create_devops_client
+from ditto_client.generated.ditto_client import DittoClient
 
 config_app = Typer()
 
 
 @config_app.command()
-def get() -> None:
+def get(ctx: typer.Context) -> None:
     """Get configuration from Ditto services."""
 
-    async def _run() -> None:
-        client = create_devops_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         response = await client.devops.config.get()
 
         if not response:

@@ -1,22 +1,24 @@
 import asyncio
+from typing import cast
 
+import typer
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from typer import Typer
 
-from ._utils import create_ditto_client
+from ditto_client.generated.ditto_client import DittoClient
 
 devops_app = Typer()
 
 
 @devops_app.command()
-def whoami() -> None:
+def whoami(ctx: typer.Context) -> None:
     """Get current user information."""
 
-    async def _run() -> None:
-        client = create_ditto_client()
+    client = cast(DittoClient, ctx.obj)
 
+    async def _run() -> None:
         response = await client.api.two.whoami.get()
 
         if not response:

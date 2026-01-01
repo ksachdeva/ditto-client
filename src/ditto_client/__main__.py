@@ -1,6 +1,5 @@
-# ruff: noqa: B008
-
 import logging
+from typing import Annotated
 
 import typer
 from dotenv import load_dotenv
@@ -38,12 +37,14 @@ LOG_LEVELS = {
 
 @cli_app.callback()
 def main(
-    loglevel: str = typer.Option(
-        "warning",
-        "--loglevel",
-        "-l",
-        help="Set the logging level (debug, info, warning, error, critical)",
-    ),
+    loglevel: Annotated[
+        str,
+        typer.Option(
+            "--loglevel",
+            "-l",
+            help="Set the logging level (debug, info, warning, error, critical)",
+        ),
+    ] = "warning",
 ) -> None:
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("ditto_client").setLevel(LOG_LEVELS.get(loglevel, logging.WARNING))

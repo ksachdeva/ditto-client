@@ -1,9 +1,7 @@
-# ruff: noqa: B008
-
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 import jsonpatch
 import typer
@@ -25,8 +23,8 @@ thing_app = Typer()
 
 @thing_app.command()
 def create(
-    thing_id: str = typer.Argument(..., help="The ID of the thing to create"),
-    data_file: Path = typer.Argument(..., help="Path to JSON file containing thing additional data"),
+    thing_id: Annotated[str, typer.Argument(help="The ID of the thing to create")],
+    data_file: Annotated[Path, typer.Argument(help="Path to JSON file containing thing additional data")],
 ) -> None:
     """Create a new thing."""
 
@@ -47,11 +45,14 @@ def create(
 
 @thing_app.command()
 def list(
-    fields: Optional[str] = typer.Option(
-        None, "--fields", "-f", help="Comma-separated list of fields to include (e.g., 'thingId,attributes,features')"
-    ),
-    ids: Optional[str] = typer.Option(None, help="Comma-separated list of thing IDs to retrieve"),
-    timeout: Optional[str] = typer.Option(None, help="Request timeout (e.g., '30s', '1m')"),
+    fields: Annotated[
+        Optional[str],
+        typer.Option(
+            "--fields", "-f", help="Comma-separated list of fields to include (e.g., 'thingId,attributes,features')"
+        ),
+    ] = None,
+    ids: Annotated[Optional[str], typer.Option(help="Comma-separated list of thing IDs to retrieve")] = None,
+    timeout: Annotated[Optional[str], typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
 ) -> None:
     """List things from Ditto."""
 
@@ -97,8 +98,8 @@ def list(
 
 @thing_app.command()
 def get(
-    thing_id: str = typer.Argument(..., help="The ID of the thing to retrieve"),
-    revision: Optional[int] = typer.Option(None, help="Historical revision number to retrieve"),
+    thing_id: Annotated[str, typer.Argument(help="The ID of the thing to retrieve")],
+    revision: Annotated[Optional[int], typer.Option(help="Historical revision number to retrieve")] = None,
 ) -> None:
     """Get a specific thing by ID."""
 
@@ -124,8 +125,8 @@ def get(
 
 @thing_app.command()
 def update(
-    thing_id: str = typer.Argument(..., help="The ID of the thing to update"),
-    patch_file: Path = typer.Argument(..., help="Path to JSON patch file"),
+    thing_id: Annotated[str, typer.Argument(help="The ID of the thing to update")],
+    patch_file: Annotated[Path, typer.Argument(help="Path to JSON patch file")],
 ) -> None:
     """Update a thing using JSON patch."""
 
@@ -146,8 +147,8 @@ def update(
 
 @thing_app.command()
 def diff(
-    thing_id: str = typer.Argument(..., help="The ID of the thing to compare"),
-    revision: int = typer.Argument(..., help="Historical revision number to compare with current"),
+    thing_id: Annotated[str, typer.Argument(help="The ID of the thing to compare")],
+    revision: Annotated[int, typer.Argument(help="Historical revision number to compare with current")],
 ) -> None:
     """Compare current thing state with a historical revision."""
 
@@ -207,8 +208,8 @@ def diff(
 
 @thing_app.command()
 def delete(
-    thing_id: str = typer.Argument(..., help="The ID of the thing to delete"),
-    confirm: bool = typer.Option(False, help="Skip confirmation prompt"),
+    thing_id: Annotated[str, typer.Argument(help="The ID of the thing to delete")],
+    confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
     """Delete a thing."""
 

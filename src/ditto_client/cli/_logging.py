@@ -1,9 +1,7 @@
-# ruff: noqa: B008
-
 import asyncio
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -24,7 +22,7 @@ logging_app = Typer()
 
 @logging_app.command()
 def get(
-    module_name: Optional[str] = typer.Option(None, help="Module name to get logging config for"),
+    module_name: Annotated[Optional[str], typer.Option(help="Module name to get logging config for")] = None,
 ) -> None:
     """Get logging configuration from Ditto services."""
 
@@ -53,8 +51,8 @@ def get(
 
 @logging_app.command()
 def update(
-    update_file: Path = typer.Argument(..., help="Path to JSON file containing logging updates"),
-    module_name: Optional[str] = typer.Option(None, help="Module name to update logging config for"),
+    update_file: Annotated[Path, typer.Argument(help="Path to JSON file containing logging updates")],
+    module_name: Annotated[Optional[str], typer.Option(help="Module name to update logging config for")] = None,
 ) -> None:
     """Update logging configuration for Ditto services."""
 

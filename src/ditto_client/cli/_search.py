@@ -1,7 +1,5 @@
-# ruff: noqa: B008
-
 import asyncio
-from typing import Optional
+from typing import Annotated, Optional
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -20,13 +18,13 @@ search_app = Typer()
 
 @search_app.command()
 def query(
-    filter: Optional[str] = typer.Option(
-        None, help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')"
-    ),
-    fields: Optional[str] = typer.Option(None, help="Comma-separated list of fields to include"),
-    namespaces: Optional[str] = typer.Option(None, help="Comma-separated list of namespaces to search"),
-    option: Optional[str] = typer.Option(None, help="Search options (e.g., 'size(10),sort(+thingId)')"),
-    timeout: Optional[str] = typer.Option(None, help="Request timeout (e.g., '30s', '1m')"),
+    filter: Annotated[
+        Optional[str], typer.Option(help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')")
+    ] = None,
+    fields: Annotated[Optional[str], typer.Option(help="Comma-separated list of fields to include")] = None,
+    namespaces: Annotated[Optional[str], typer.Option(help="Comma-separated list of namespaces to search")] = None,
+    option: Annotated[Optional[str], typer.Option(help="Search options (e.g., 'size(10),sort(+thingId)')")] = None,
+    timeout: Annotated[Optional[str], typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
 ) -> None:
     """Search for things in Ditto."""
 
@@ -77,10 +75,10 @@ def query(
 
 @search_app.command()
 def count(
-    filter: Optional[str] = typer.Option(
-        None, help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')"
-    ),
-    namespaces: Optional[str] = typer.Option(None, help="Comma-separated list of namespaces to search"),
+    filter: Annotated[
+        Optional[str], typer.Option(help="RQL filter expression (e.g., 'eq(attributes/location,\"kitchen\")')")
+    ] = None,
+    namespaces: Annotated[Optional[str], typer.Option(help="Comma-separated list of namespaces to search")] = None,
 ) -> None:
     """List things from Ditto."""
 

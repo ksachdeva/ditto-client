@@ -1,5 +1,3 @@
-# ruff: noqa: B008
-
 import asyncio
 
 from rich import print as rprint

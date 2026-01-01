@@ -1,9 +1,7 @@
-# ruff: noqa: B008
-
 import asyncio
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -25,8 +23,8 @@ connection_app = Typer()
 
 @connection_app.command()
 def create(
-    connection_id: str = typer.Argument(..., help="The ID of the connection to create"),
-    connection_file: Path = typer.Argument(..., help="Path to connection definition"),
+    connection_id: Annotated[str, typer.Argument(help="The ID of the connection to create")],
+    connection_file: Annotated[Path, typer.Argument(help="Path to connection definition")],
 ) -> None:
     """Create a new connection."""
 
@@ -49,10 +47,10 @@ def create(
 
 @connection_app.command()
 def list(
-    fields: Optional[str] = typer.Option(
-        None,
-        help="Comma-separated list of fields to include (e.g., 'id,connectionStatus,uri')",
-    ),
+    fields: Annotated[
+        Optional[str],
+        typer.Option(help="Comma-separated list of fields to include (e.g., 'id,connectionStatus,uri')"),
+    ] = None,
 ) -> None:
     """List connections from Ditto."""
 
@@ -99,8 +97,8 @@ def list(
 
 @connection_app.command()
 def get(
-    connection_id: str = typer.Argument(..., help="The ID of the connection to retrieve"),
-    fields: Optional[str] = typer.Option(None, help="Comma-separated list of fields to include"),
+    connection_id: Annotated[str, typer.Argument(help="The ID of the connection to retrieve")],
+    fields: Annotated[Optional[str], typer.Option(help="Comma-separated list of fields to include")] = None,
 ) -> None:
     """Get a specific connection by ID."""
 
@@ -129,8 +127,8 @@ def get(
 
 @connection_app.command()
 def delete(
-    connection_id: str = typer.Argument(..., help="The ID of the connection to delete"),
-    confirm: bool = typer.Option(False, help="Skip confirmation prompt"),
+    connection_id: Annotated[str, typer.Argument(help="The ID of the connection to delete")],
+    confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
     """Delete a connection."""
 

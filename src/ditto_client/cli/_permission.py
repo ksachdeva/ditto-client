@@ -1,8 +1,7 @@
-# ruff: noqa: B008
-
 import asyncio
 import json
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich import print as rprint
@@ -17,7 +16,7 @@ permission_app = Typer()
 
 @permission_app.command()
 def check(
-    request_file: Path = typer.Argument(..., help="Path to JSON file containing permission check request"),
+    request_file: Annotated[Path, typer.Argument(help="Path to JSON file containing permission check request")],
 ) -> None:
     """Check permissions on specified resources."""
 

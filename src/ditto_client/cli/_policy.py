@@ -1,8 +1,7 @@
-# ruff: noqa: B008
-
 import asyncio
 import json
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich import print as rprint
@@ -17,8 +16,8 @@ policy_app = Typer()
 
 @policy_app.command()
 def create(
-    policy_id: str = typer.Argument(..., help="The ID of the policy to create"),
-    policy_file: Path = typer.Argument(..., help="Path to JSON file containing policy definition"),
+    policy_id: Annotated[str, typer.Argument(help="The ID of the policy to create")],
+    policy_file: Annotated[Path, typer.Argument(help="Path to JSON file containing policy definition")],
 ) -> None:
     """Create a new policy."""
 
@@ -44,7 +43,7 @@ def create(
 
 @policy_app.command()
 def get(
-    policy_id: str = typer.Argument(..., help="The ID of the policy to retrieve"),
+    policy_id: Annotated[str, typer.Argument(help="The ID of the policy to retrieve")],
 ) -> None:
     """Get a specific policy by ID."""
 
@@ -64,7 +63,7 @@ def get(
 
 @policy_app.command()
 def entries(
-    policy_id: str = typer.Argument(..., help="The ID of the policy"),
+    policy_id: Annotated[str, typer.Argument(help="The ID of the policy")],
 ) -> None:
     """List policy entries."""
 
@@ -84,8 +83,8 @@ def entries(
 
 @policy_app.command()
 def delete(
-    policy_id: str = typer.Argument(..., help="The ID of the policy to delete"),
-    confirm: bool = typer.Option(False, help="Skip confirmation prompt"),
+    policy_id: Annotated[str, typer.Argument(help="The ID of the policy to delete")],
+    confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
     """Delete a policy."""
 

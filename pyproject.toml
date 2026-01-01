@@ -66,11 +66,7 @@ fix = true
 target-version = "py311"
 
 exclude = [
-    "src/ditto_client/api",
-    "src/ditto_client/devops",
-    "src/ditto_client/models",
-    "src/ditto_client/ditto_client.py",
-
+    "src/ditto_client/generated"
 ]
 
 [tool.ruff.format]
@@ -109,6 +105,7 @@ include = ["src", "tests", "samples"]
 # typeCheckingMode = "strict"
 reportUnnecessaryIsInstance = false
 reportMissingTypeStubs = false
+exclude = ["src/ditto_client/generated"]
 
 [tool.poe.tasks.generate-kiota-client]
 help = "Generate the client code using Kiota"

@@ -8,8 +8,6 @@ from typing import Optional
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
 from typer import Typer
 
 from ditto_client.generated.devops.logging.logging_request_builder import LoggingRequestBuilder

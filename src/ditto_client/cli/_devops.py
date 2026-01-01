@@ -1,7 +1,6 @@
 # ruff: noqa: B008
 
 import asyncio
-import os
 
 from rich import print as rprint
 from rich.console import Console

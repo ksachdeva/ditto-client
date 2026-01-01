@@ -1,14 +1,9 @@
 # ruff: noqa: B008
 
 import asyncio
-from typing import Optional
 
-import typer
 from rich import print as rprint
 from typer import Typer
-
-from ditto_client.generated.models.retrieve_config import RetrieveConfig
-from ditto_client.generated.models.retrieve_config_service import RetrieveConfigService
 
 from ._utils import create_devops_client
 

@@ -2,7 +2,7 @@
 
 Eclipse Ditto Project - https://eclipse.dev/ditto/index.html
 
-This repository is the python client generated using Microsoft Kiota ([https://github.com/microsoft/kiota-python](https://github.com/microsoft/kiota-python))
+This repository is the python client generated using Microsoft Kiota ([https://github.com/microsoft/kiota-python](https://github.com/microsoft/kiota-python)) and a CLI based client.
 
 ## Install
 
@@ -76,28 +76,28 @@ export DITTO_DEVOPS_PASSWORD="foobar"
 
 ```bash
 # Create a new policy
-ditto-client policy create "my.namespace:new-policy" examples/cli-examples/policy.json
+ditto-client policy create "my.sensors:sensor-policy" examples/cli-examples/policy.json
 ```
 
 #### Retrieve a specific policy by ID.
 
 ```bash
 # Get a policy
-ditto-client policy get "my.namespace:my-policy"
+ditto-client policy get "my.sensors:sensor-policy"
 ```
 
 #### List policy entries.
 
 ```bash
 # List all policy entries
-ditto-client policy entries "my.namespace:my-policy"
+ditto-client policy entries "my.sensors:sensor-policy"
 ```
 
 #### Delete policy.
 
 ```bash
 # Delete a policy
-ditto-client policy delete "my.namespace:my-policy"
+ditto-client policy delete "my.sensors:sensor-policy"
 ```
 
 ---
@@ -107,8 +107,9 @@ ditto-client policy delete "my.namespace:my-policy"
 #### Create a new thing.
 
 ```bash
+# Make sure to create the policy (my.sensors:sensor-policy) See above example
 # Create a new thing
-ditto-client thing create "my.namespace:new-thing" examples/cli-examples/thing.json
+ditto-client thing create "my.sensors:sensor-001" examples/cli-examples/thing.json
 ```
 
 #### List all things with optional filtering.
@@ -121,38 +122,38 @@ ditto-client thing list
 ditto-client thing list --fields "thingId,attributes"
 
 # List specific things by ID
-ditto-client thing list --ids "my.namespace:new-thing"
+ditto-client thing list --ids "my.sensors:sensor-001"
 ```
 
 #### Retrieve a specific thing by ID.
 
 ```bash
 # Get a specific thing
-ditto-client thing get "my.namespace:my-thing"
+ditto-client thing get "my.sensors:sensor-001"
 
 # Get a specific revision of a thing
-ditto-client thing get "my.namespace:my-thing" --revision 1
+ditto-client thing get "my.sensors:sensor-001" --revision 1
 ```
 
 #### Update a thing using JSON file.
 
 ```bash
 # Update a thing
-ditto-client thing update "my.namespace:my-thing" examples/cli-examples/thing.json
+ditto-client thing update "my.sensors:sensor-001" examples/cli-examples/thing.json
 ```
 
 #### Compare current thing with historical revision.
 
 ```bash
 # Compare current state with revision 1
-ditto-client thing diff "my.namespace:my-thing" 1
+ditto-client thing diff "my.sensors:sensor-001" 1
 ```
 
 #### Delete a thing.
 
 ```bash
 # Delete a thing
-ditto-client thing delete "my.namespace:my-thing"
+ditto-client thing delete "my.sensors:sensor-001"
 ```
 
 ---
@@ -160,7 +161,7 @@ ditto-client thing delete "my.namespace:my-thing"
 ### Search Operations
 
 Refer below documentation to understand RQL syntax:
-https://eclipse.dev/ditto/1.0/basic-rql.html
+https://eclipse.dev/ditto/1.5/basic-rql.html
 
 #### Search for things using RQL (Resource Query Language).
 
@@ -175,7 +176,7 @@ ditto-client search query --filter 'eq(attributes/location,"Kitchen")'
 ditto-client search query --option "size(3),sort(+thingId)"
 
 # Search in specific namespaces
-ditto-client search query --namespaces "my.namespace"
+ditto-client search query --namespaces "my.sensors"
 ```
 
 #### Count things matching search criteria.
@@ -196,7 +197,7 @@ ditto-client search count --filter 'eq(attributes/location,"Kitchen")'
 
 ```bash
 # Create a connection
-ditto-client connection create "new-connection" --definition "connection-config"
+ditto-client connection create "new-connection" examples/cli-examples/connection.json
 ```
 
 #### List all connections.
@@ -213,17 +214,17 @@ ditto-client connection list --fields "id,connectionStatus"
 
 ```bash
 # Get a connection
-ditto-client connection get "my-connection"
+ditto-client connection get "new-connection"
 
 # Get with specific fields
-ditto-client connection get "my-connection" --fields "id,status"
+ditto-client connection get "new-connection" --fields "id,status"
 ```
 
 #### Delete a connection.
 
 ```bash
 # Delete a connection
-ditto-client connection delete "my-connection"
+ditto-client connection delete "new-connection"
 ```
 
 ---
@@ -248,7 +249,7 @@ ditto-client config get
 ditto-client logging get
 
 # Get module-specific config
-ditto-client logging get --module "gateway"
+ditto-client logging get --module-name "gateway"
 ```
 
 #### Update logging configuration.

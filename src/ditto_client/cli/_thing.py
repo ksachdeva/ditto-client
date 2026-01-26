@@ -20,6 +20,25 @@ from ditto_client.generated.models.thing import Thing
 thing_app = Typer()
 
 
+def _get_table_flag(ctx: typer.Context) -> bool:
+    """Get the table flag from context by traversing up the parent chain."""
+    current = ctx
+    while current:
+        if hasattr(current, "meta") and current.meta and "table" in current.meta:
+            return current.meta["table"]
+        if hasattr(current, "parent"):
+            current = current.parent
+        else:
+            break
+    return False
+
+
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
+
+
 @thing_app.command()
 def create(
     ctx: typer.Context,
@@ -56,6 +75,7 @@ def list(
 ) -> None:
     """List things from Ditto."""
     client = cast(DittoClient, ctx.obj)
+    use_table = _get_table_flag(ctx)
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -74,23 +94,41 @@ def list(
         response = await client.api.two.things.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No things found[/yellow]")
+            if use_table:
+                rprint("[yellow]No things found[/yellow]")
+            else:
+                _output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Things")
-        table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Features", justify="center", style="yellow")
+        if use_table:
+            table = Table(title="Ditto Things")
+            table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
+            table.add_column("Features", justify="center", style="yellow")
 
-        for thing in response:
-            # Features is a Features object, not a dict, so we need to check if it has any data
-            features_count = (
-                len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
-            )
-            table.add_row(thing.thing_id, str(features_count))
+            for thing in response:
+                features_count = (
+                    len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
+                )
+                table.add_row(thing.thing_id, str(features_count))
 
-        console = Console()
-        console.print(table)
+            console = Console()
+            console.print(table)
+        else:
+            output_data = []
+            for thing in response:
+                thing_dict: dict[str, Any] = {}
+                if thing.thing_id:
+                    thing_dict["thingId"] = thing.thing_id
+                if thing.policy_id:
+                    thing_dict["policyId"] = thing.policy_id
+                if thing.definition:
+                    thing_dict["definition"] = thing.definition
+                if thing.attributes and thing.attributes.additional_data:
+                    thing_dict["attributes"] = thing.attributes.additional_data
+                if thing.features and thing.features.additional_data:
+                    thing_dict["features"] = thing.features.additional_data
+                output_data.append(thing_dict)
+            _output_json(output_data)
 
     asyncio.run(_run())
 

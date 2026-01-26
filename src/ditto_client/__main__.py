@@ -1,7 +1,8 @@
 import asyncio
+import json
 import logging
 import os
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from dotenv import load_dotenv
@@ -68,11 +69,33 @@ def _create_ba_ditto_client() -> DittoClient:
     return _create_client(user_name, password)
 
 
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
+
+
+def _get_table_flag(ctx: typer.Context) -> bool:
+    """Get the table flag from context by traversing up the parent chain."""
+    current = ctx
+    while current:
+        if hasattr(current, "meta") and current.meta and "table" in current.meta:
+            return current.meta["table"]
+        if hasattr(current, "parent"):
+            current = current.parent
+        else:
+            break
+    return False
+
+
 @cli_app.command()
-def whoami() -> None:
+def whoami(
+    ctx: typer.Context,
+) -> None:
     """Get current user information."""
 
     client = _create_ba_ditto_client()
+    use_table = _get_table_flag(ctx)
 
     async def _run() -> None:
         response = await client.api.two.whoami.get()
@@ -81,16 +104,22 @@ def whoami() -> None:
             rprint("[red]Failed to get user information[/red]")
             return
 
-        # Create a table for better display
-        table = Table(title="Current User Information")
-        table.add_column("Property", justify="right", style="cyan", no_wrap=True)
-        table.add_column("Value", justify="left", style="green")
+        if use_table:
+            table = Table(title="Current User Information")
+            table.add_column("Property", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Value", justify="left", style="green")
 
-        table.add_row("Default Subject", response.default_subject or "N/A")
-        table.add_row("Subjects", ", ".join(response.subjects) if response.subjects else "None")
+            table.add_row("Default Subject", response.default_subject or "N/A")
+            table.add_row("Subjects", ", ".join(response.subjects) if response.subjects else "None")
 
-        console = Console()
-        console.print(table)
+            console = Console()
+            console.print(table)
+        else:
+            output_data = {
+                "default_subject": response.default_subject,
+                "subjects": response.subjects or [],
+            }
+            _output_json(output_data)
 
     asyncio.run(_run())
 
@@ -106,9 +135,19 @@ def main(
             help="Set the logging level (debug, info, warning, error, critical)",
         ),
     ] = "warning",
+    table: Annotated[
+        bool,
+        typer.Option(
+            "--table",
+            help="Output results as a rich table instead of JSON",
+        ),
+    ] = False,
 ) -> None:
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("ditto_client").setLevel(LOG_LEVELS.get(loglevel, logging.WARNING))
+    if not hasattr(ctx, "meta") or ctx.meta is None:
+        ctx.meta = {}
+    ctx.meta["table"] = table
 
     # create Ditto Clients based on the command types
     if ctx.invoked_subcommand == "devops":

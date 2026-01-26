@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional, cast
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -18,6 +18,25 @@ from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_connection import NewConnection
 
 connection_app = Typer()
+
+
+def _get_table_flag(ctx: typer.Context) -> bool:
+    """Get the table flag from context by traversing up the parent chain."""
+    current = ctx
+    while current:
+        if hasattr(current, "meta") and current.meta and "table" in current.meta:
+            return current.meta["table"]
+        if hasattr(current, "parent"):
+            current = current.parent
+        else:
+            break
+    return False
+
+
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
 
 
 @connection_app.command()
@@ -53,6 +72,7 @@ def list(
     """List connections from Ditto."""
 
     client = cast(DittoClient, ctx.obj)
+    use_table = _get_table_flag(ctx)
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -67,28 +87,48 @@ def list(
         response = await client.api.two.connections.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No connections found[/yellow]")
+            if use_table:
+                rprint("[yellow]No connections found[/yellow]")
+            else:
+                _output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Connections")
-        table.add_column("Connection ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Status", justify="center", style="green")
-        table.add_column("Type", justify="center", style="yellow")
-        table.add_column("URI", justify="left", style="blue")
+        if use_table:
+            # Create a table for better display
+            table = Table(title="Ditto Connections")
+            table.add_column("Connection ID", justify="left", style="cyan", no_wrap=True)
+            table.add_column("Status", justify="center", style="green")
+            table.add_column("Type", justify="center", style="yellow")
+            table.add_column("URI", justify="left", style="blue")
 
-        for connection in response:
-            connection_id = connection.id
-            connection_status = connection.connection_status
-            connection_type = connection.connection_type
-            connection_uri = connection.uri if connection.uri else "N/A"
+            for connection in response:
+                connection_id = connection.id
+                connection_status = connection.connection_status
+                connection_type = connection.connection_type
+                connection_uri = connection.uri if connection.uri else "N/A"
 
-            table.add_row(
-                connection_id, connection_status, connection_type, connection_uri if connection_uri else "N/A"
-            )
+                table.add_row(
+                    connection_id, connection_status, connection_type, connection_uri if connection_uri else "N/A"
+                )
 
-        console = Console()
-        console.print(table)
+            console = Console()
+            console.print(table)
+        else:
+            output_data = []
+            for connection in response:
+                connection_dict: dict[str, Any] = {}
+                if connection.id:
+                    connection_dict["id"] = connection.id
+                if connection.connection_status:
+                    connection_dict["connectionStatus"] = connection.connection_status
+                if connection.connection_type:
+                    connection_dict["connectionType"] = connection.connection_type
+                if connection.uri:
+                    connection_dict["uri"] = connection.uri
+                if hasattr(connection, "additional_data") and connection.additional_data:
+                    connection_dict.update(connection.additional_data)
+                output_data.append(connection_dict)
+            _output_json(output_data)
 
     asyncio.run(_run())
 
@@ -116,10 +156,21 @@ def get(
         )
 
         if not response:
-            rprint(f"[red]Thing '{connection_id}' not found[/red]")
+            rprint(f"[red]Connection '{connection_id}' not found[/red]")
             return
 
-        rprint(response)
+        connection_dict: dict[str, Any] = {}
+        if response.id:
+            connection_dict["id"] = response.id
+        if response.connection_status:
+            connection_dict["connectionStatus"] = response.connection_status
+        if response.connection_type:
+            connection_dict["connectionType"] = response.connection_type
+        if response.uri:
+            connection_dict["uri"] = response.uri
+        if hasattr(response, "additional_data") and response.additional_data:
+            connection_dict.update(response.additional_data)
+        _output_json(connection_dict)
 
     asyncio.run(_run())
 

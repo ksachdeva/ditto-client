@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional, cast
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -17,6 +17,12 @@ from ditto_client.generated.models.result_update_request import ResultUpdateRequ
 from ditto_client.generated.models.retrieve_logging_config import RetrieveLoggingConfig
 
 logging_app = Typer()
+
+
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
 
 
 @logging_app.command()
@@ -44,7 +50,10 @@ def get(
             rprint("[yellow]No logging configuration found[/yellow]")
             return
 
-        rprint(response)
+        config_dict: dict[str, Any] = {}
+        if hasattr(response, "additional_data") and response.additional_data:
+            config_dict = response.additional_data
+        _output_json(config_dict)
 
     asyncio.run(_run())
 
@@ -72,6 +81,9 @@ def update(
         else:
             response = await client.devops.logging.put(body=logging_update)
 
-        rprint(response)
+        result_dict: dict[str, Any] = {}
+        if hasattr(response, "additional_data") and response.additional_data:
+            result_dict = response.additional_data
+        _output_json(result_dict)
 
     asyncio.run(_run())

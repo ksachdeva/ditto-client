@@ -1,5 +1,6 @@
 import asyncio
-from typing import Annotated, Optional, cast
+import json
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
@@ -13,6 +14,25 @@ from ditto_client.generated.api.two.search.things.things_request_builder import 
 from ditto_client.generated.ditto_client import DittoClient
 
 search_app = Typer()
+
+
+def _get_table_flag(ctx: typer.Context) -> bool:
+    """Get the table flag from context by traversing up the parent chain."""
+    current = ctx
+    while current:
+        if hasattr(current, "meta") and current.meta and "table" in current.meta:
+            return current.meta["table"]
+        if hasattr(current, "parent"):
+            current = current.parent
+        else:
+            break
+    return False
+
+
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
 
 
 @search_app.command()
@@ -49,16 +69,19 @@ def query(
 
         response = await client.api.two.search.things.get(request_configuration=request_config)
 
-        if not response:
-            rprint("[yellow]No things found[/yellow]")
+        if not response or not response.items:
+            if use_table:
+                rprint("[yellow]No things found[/yellow]")
+            else:
+                _output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Things")
-        table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Features", justify="center", style="yellow")
+        if use_table:
+            # Create a table for better display
+            table = Table(title="Ditto Things")
+            table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
+            table.add_column("Features", justify="center", style="yellow")
 
-        if response.items:
             for thing in response.items:
                 # Features is a Features object, not a dict, so we need to check if it has any data
                 features_count = (
@@ -66,8 +89,24 @@ def query(
                 )
                 table.add_row(thing.thing_id, str(features_count))
 
-        console = Console()
-        console.print(table)
+            console = Console()
+            console.print(table)
+        else:
+            output_data = []
+            for thing in response.items:
+                thing_dict: dict[str, Any] = {}
+                if thing.thing_id:
+                    thing_dict["thingId"] = thing.thing_id
+                if thing.policy_id:
+                    thing_dict["policyId"] = thing.policy_id
+                if thing.definition:
+                    thing_dict["definition"] = thing.definition
+                if thing.attributes and thing.attributes.additional_data:
+                    thing_dict["attributes"] = thing.attributes.additional_data
+                if thing.features and thing.features.additional_data:
+                    thing_dict["features"] = thing.features.additional_data
+                output_data.append(thing_dict)
+            _output_json(output_data)
 
     asyncio.run(_run())
 
@@ -96,6 +135,6 @@ def count(
             request_config = RequestConfiguration(query_parameters=query_params)
 
         response = await client.api.two.search.things.count.get(request_configuration=request_config)
-        rprint(f"[green]Total things: {response}[/green]")
+        _output_json({"count": response})
 
     asyncio.run(_run())

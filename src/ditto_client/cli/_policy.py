@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated, Any, cast
 
 import typer
 from rich import print as rprint
@@ -11,6 +11,12 @@ from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_policy import NewPolicy
 
 policy_app = Typer()
+
+
+def _output_json(data: Any) -> None:
+    """Output data as JSON."""
+    json_str = json.dumps(data, indent=2, default=str)
+    print(json_str)
 
 
 @policy_app.command()
@@ -34,7 +40,10 @@ def create(
 
         if response:
             rprint(f"[green]Successfully created policy '{policy_id}'[/green]")
-            rprint(response)
+            policy_dict: dict[str, Any] = {}
+            if hasattr(response, "additional_data") and response.additional_data:
+                policy_dict = response.additional_data
+            _output_json(policy_dict)
         else:
             rprint(f"[red]Failed to create policy '{policy_id}'[/red]")
 
@@ -56,7 +65,10 @@ def get(
             rprint(f"[red]Policy '{policy_id}' not found[/red]")
             return
 
-        rprint(response)
+        policy_dict: dict[str, Any] = {}
+        if hasattr(response, "additional_data") and response.additional_data:
+            policy_dict = response.additional_data
+        _output_json(policy_dict)
 
     asyncio.run(_run())
 
@@ -76,7 +88,10 @@ def entries(
             rprint("[yellow]No policy entries found[/yellow]")
             return
 
-        rprint(response)
+        entries_dict: dict[str, Any] = {}
+        if hasattr(response, "additional_data") and response.additional_data:
+            entries_dict = response.additional_data
+        _output_json(entries_dict)
 
     asyncio.run(_run())
 

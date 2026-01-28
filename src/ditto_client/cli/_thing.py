@@ -6,11 +6,9 @@ from typing import Annotated, Any, Optional, cast
 import jsonpatch
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
-from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
 from typer import Typer
 
+from ditto_client.cli.utils._output import get_table_flag, output_error, output_json, output_success, output_table, output_warning, thing_to_dict
 from ditto_client.generated.api.two.things.things_request_builder import ThingsRequestBuilder
 from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_thing import NewThing
@@ -37,7 +35,7 @@ def create(
         new_thing = NewThing(additional_data=thing_data)
 
         await client.api.two.things.by_thing_id(thing_id).put(body=new_thing)
-        rprint(f"[green]Successfully created thing '{thing_id}'[/green]")
+        output_success(f"Successfully created thing '{thing_id}'")
 
     asyncio.run(_run())
 
@@ -56,6 +54,7 @@ def list(
 ) -> None:
     """List things from Ditto."""
     client = cast(DittoClient, ctx.obj)
+    use_table = get_table_flag(ctx)
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -74,23 +73,30 @@ def list(
         response = await client.api.two.things.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No things found[/yellow]")
+            if use_table:
+                output_warning("No things found")
+            else:
+                output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Things")
-        table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Features", justify="center", style="yellow")
+        if use_table:
+            rows = []
+            for thing in response:
+                features_count = (
+                    len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
+                )
+                rows.append([thing.thing_id or "", str(features_count)])
 
-        for thing in response:
-            # Features is a Features object, not a dict, so we need to check if it has any data
-            features_count = (
-                len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
+            output_table(
+                title="Ditto Things",
+                columns=[
+                    ("Thing ID", "left", "cyan"),
+                    ("Features", "center", "yellow"),
+                ],
+                rows=rows,
             )
-            table.add_row(thing.thing_id, str(features_count))
-
-        console = Console()
-        console.print(table)
+        else:
+            output_json([thing_to_dict(thing) for thing in response])
 
     asyncio.run(_run())
 
@@ -114,10 +120,10 @@ def get(
         response = await client.api.two.things.by_thing_id(thing_id).get(request_configuration=request_config)
 
         if not response:
-            rprint(f"[red]Thing '{thing_id}' not found[/red]")
+            output_error(f"Thing '{thing_id}' not found")
             return
 
-        rprint(response)
+        output_json(thing_to_dict(response))
 
     asyncio.run(_run())
 
@@ -139,7 +145,7 @@ def update(
         patch_thing = PatchThing(additional_data=patch_data)
 
         await client.api.two.things.by_thing_id(thing_id).patch(body=patch_thing)
-        rprint(f"[green]Successfully updated thing '{thing_id}'[/green]")
+        output_success(f"Successfully updated thing '{thing_id}'")
 
     asyncio.run(_run())
 
@@ -172,7 +178,7 @@ def diff(
         # Get current thing
         current_response = await client.api.two.things.by_thing_id(thing_id).get()
         if not current_response:
-            rprint(f"[red]Thing '{thing_id}' not found[/red]")
+            output_error(f"Thing '{thing_id}' not found")
             return
 
         # Get historical revision
@@ -183,7 +189,7 @@ def diff(
             request_configuration=request_config
         )
         if not historical_response:
-            rprint(f"[red]Thing '{thing_id}' revision {revision} not found[/red]")
+            output_error(f"Thing '{thing_id}' revision {revision} not found")
             return
 
         # Extract features and attributes
@@ -198,10 +204,9 @@ def diff(
         patch = jsonpatch.make_patch(historical_json, current_json)
 
         if not patch:
-            rprint(f"[green]No differences found between current thing and revision {revision}[/green]")
+            output_json({"diff": [], "message": f"No differences found between current thing and revision {revision}"})
         else:
-            rprint(f"[cyan]Differences between revision {revision} and current state of '{thing_id}':[/cyan]")
-            rprint(patch)
+            output_json({"diff": list(patch)})
 
     asyncio.run(_run())
 
@@ -216,13 +221,13 @@ def delete(
 
     if not confirm:
         if not typer.confirm(f"Are you sure you want to delete thing '{thing_id}'?"):
-            rprint("[yellow]Operation cancelled[/yellow]")
+            output_warning("Operation cancelled")
             return
 
     client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
         await client.api.two.things.by_thing_id(thing_id).delete()
-        rprint(f"[green]Successfully deleted thing '{thing_id}'[/green]")
+        output_success(f"Successfully deleted thing '{thing_id}'")
 
     asyncio.run(_run())

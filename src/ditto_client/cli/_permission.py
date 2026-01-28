@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Annotated, cast
 
 import typer
-from rich import print as rprint
 from typer import Typer
 
+from ditto_client.cli.utils._output import output_error, output_json, output_warning
 from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.permission_check_request import PermissionCheckRequest
 
@@ -31,14 +31,13 @@ def check(
         response = await client.api.two.check_permissions.post(body=permission_request)
 
         if not response:
-            rprint("[red]Permission check failed[/red]")
+            output_error("Permission check failed")
             return
 
         # Display the permission check results
         if response.additional_data:
-            rprint("[green]Permission Check Results:[/green]")
-            rprint(json.dumps(response.additional_data, indent=2, default=str))
+            output_json(response.additional_data)
         else:
-            rprint("[yellow]No permission check results returned[/yellow]")
+            output_warning("No permission check results returned")
 
     asyncio.run(_run())

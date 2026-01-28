@@ -1,15 +1,13 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional, cast
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
-from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
 from typer import Typer
 
+from ditto_client.cli.utils._output import get_table_flag, output_error, output_json, output_success, output_table, output_warning
 from ditto_client.generated.api.two.connections.connections_request_builder import ConnectionsRequestBuilder
 from ditto_client.generated.api.two.connections.item.with_connection_item_request_builder import (
     WithConnectionItemRequestBuilder,
@@ -18,6 +16,22 @@ from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_connection import NewConnection
 
 connection_app = Typer()
+
+
+def _connection_to_dict(connection: Any) -> dict[str, Any]:
+    """Convert a Connection object to a dictionary."""
+    connection_dict: dict[str, Any] = {}
+    if connection.id:
+        connection_dict["id"] = connection.id
+    if connection.connection_status:
+        connection_dict["connectionStatus"] = connection.connection_status
+    if connection.connection_type:
+        connection_dict["connectionType"] = connection.connection_type
+    if connection.uri:
+        connection_dict["uri"] = connection.uri
+    if hasattr(connection, "additional_data") and connection.additional_data:
+        connection_dict.update(connection.additional_data)
+    return connection_dict
 
 
 @connection_app.command()
@@ -38,6 +52,7 @@ def create(
         new_connection = NewConnection(additional_data=connection_data)
 
         await client.api.two.connections.by_connection_id(connection_id).put(body=new_connection)
+        output_success(f"Successfully created connection '{connection_id}'")
 
     asyncio.run(_run())
 
@@ -53,6 +68,7 @@ def list(
     """List connections from Ditto."""
 
     client = cast(DittoClient, ctx.obj)
+    use_table = get_table_flag(ctx)
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -67,28 +83,34 @@ def list(
         response = await client.api.two.connections.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No connections found[/yellow]")
+            if use_table:
+                output_warning("No connections found")
+            else:
+                output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Connections")
-        table.add_column("Connection ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Status", justify="center", style="green")
-        table.add_column("Type", justify="center", style="yellow")
-        table.add_column("URI", justify="left", style="blue")
+        if use_table:
+            rows = []
+            for connection in response:
+                rows.append([
+                    connection.id or "",
+                    connection.connection_status or "",
+                    connection.connection_type or "",
+                    connection.uri or "N/A",
+                ])
 
-        for connection in response:
-            connection_id = connection.id
-            connection_status = connection.connection_status
-            connection_type = connection.connection_type
-            connection_uri = connection.uri if connection.uri else "N/A"
-
-            table.add_row(
-                connection_id, connection_status, connection_type, connection_uri if connection_uri else "N/A"
+            output_table(
+                title="Ditto Connections",
+                columns=[
+                    ("Connection ID", "left", "cyan"),
+                    ("Status", "center", "green"),
+                    ("Type", "center", "yellow"),
+                    ("URI", "left", "blue"),
+                ],
+                rows=rows,
             )
-
-        console = Console()
-        console.print(table)
+        else:
+            output_json([_connection_to_dict(connection) for connection in response])
 
     asyncio.run(_run())
 
@@ -116,10 +138,10 @@ def get(
         )
 
         if not response:
-            rprint(f"[red]Thing '{connection_id}' not found[/red]")
+            output_error(f"Connection '{connection_id}' not found")
             return
 
-        rprint(response)
+        output_json(_connection_to_dict(response))
 
     asyncio.run(_run())
 
@@ -134,13 +156,13 @@ def delete(
 
     if not confirm:
         if not typer.confirm(f"Are you sure you want to delete connection '{connection_id}'?"):
-            rprint("[yellow]Operation cancelled[/yellow]")
+            output_warning("Operation cancelled")
             return
 
     client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
         await client.api.two.connections.by_connection_id(connection_id).delete()
-        rprint(f"[green]Successfully deleted connection '{connection_id}'[/green]")
+        output_success(f"Successfully deleted connection '{connection_id}'")
 
     asyncio.run(_run())

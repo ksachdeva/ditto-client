@@ -2,9 +2,9 @@ import asyncio
 from typing import cast
 
 import typer
-from rich import print as rprint
 from typer import Typer
 
+from ditto_client.cli.utils._output import extract_additional_data, output_json, output_warning
 from ditto_client.generated.ditto_client import DittoClient
 
 config_app = Typer()
@@ -20,9 +20,9 @@ def get(ctx: typer.Context) -> None:
         response = await client.devops.config.get()
 
         if not response:
-            rprint("[yellow]No configuration found[/yellow]")
+            output_warning("No configuration found")
             return
 
-        rprint(response)
+        output_json(extract_additional_data(response))
 
     asyncio.run(_run())

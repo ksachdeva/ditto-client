@@ -1,13 +1,13 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional, cast
+from typing import Annotated, Any, Optional, cast
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
-from rich import print as rprint
 from typer import Typer
 
+from ditto_client.cli.utils._output import extract_additional_data, output_json, output_warning
 from ditto_client.generated.devops.logging.logging_request_builder import LoggingRequestBuilder
 from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.logging_update_fields import LoggingUpdateFields
@@ -41,10 +41,10 @@ def get(
             response = await client.devops.logging.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No logging configuration found[/yellow]")
+            output_warning("No logging configuration found")
             return
 
-        rprint(response)
+        output_json(extract_additional_data(response))
 
     asyncio.run(_run())
 
@@ -72,6 +72,6 @@ def update(
         else:
             response = await client.devops.logging.put(body=logging_update)
 
-        rprint(response)
+        output_json(extract_additional_data(response))
 
     asyncio.run(_run())

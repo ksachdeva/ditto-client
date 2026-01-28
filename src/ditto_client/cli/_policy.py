@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Annotated, cast
 
 import typer
-from rich import print as rprint
 from typer import Typer
 
+from ditto_client.cli.utils._output import extract_additional_data, output_error, output_json, output_success, output_warning
 from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_policy import NewPolicy
 
@@ -33,10 +33,10 @@ def create(
         response = await client.api.two.policies.by_policy_id(policy_id).put(body=new_policy)
 
         if response:
-            rprint(f"[green]Successfully created policy '{policy_id}'[/green]")
-            rprint(response)
+            output_success(f"Successfully created policy '{policy_id}'")
+            output_json(extract_additional_data(response))
         else:
-            rprint(f"[red]Failed to create policy '{policy_id}'[/red]")
+            output_error(f"Failed to create policy '{policy_id}'")
 
     asyncio.run(_run())
 
@@ -53,10 +53,10 @@ def get(
         response = await client.api.two.policies.by_policy_id(policy_id).get()
 
         if not response:
-            rprint(f"[red]Policy '{policy_id}' not found[/red]")
+            output_error(f"Policy '{policy_id}' not found")
             return
 
-        rprint(response)
+        output_json(_extract_additional_data(response))
 
     asyncio.run(_run())
 
@@ -73,10 +73,10 @@ def entries(
         response = await client.api.two.policies.by_policy_id(policy_id).entries.get()
 
         if not response:
-            rprint("[yellow]No policy entries found[/yellow]")
+            output_warning("No policy entries found")
             return
 
-        rprint(response)
+        output_json(_extract_additional_data(response))
 
     asyncio.run(_run())
 
@@ -91,13 +91,13 @@ def delete(
 
     if not confirm:
         if not typer.confirm(f"Are you sure you want to delete policy '{policy_id}'?"):
-            rprint("[yellow]Operation cancelled[/yellow]")
+            output_warning("Operation cancelled")
             return
 
     client = cast(DittoClient, ctx.obj)
 
     async def _run() -> None:
         await client.api.two.policies.by_policy_id(policy_id).delete()
-        rprint(f"[green]Successfully deleted policy '{policy_id}'[/green]")
+        output_success(f"Successfully deleted policy '{policy_id}'")
 
     asyncio.run(_run())

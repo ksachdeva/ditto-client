@@ -6,14 +6,13 @@ from typing import Annotated
 import typer
 from dotenv import load_dotenv
 from kiota_http.httpx_request_adapter import HttpxRequestAdapter
-from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
-from typer import Typer
+from typer import Context, Typer
 
 from ditto_client import __version__
 from ditto_client._basic_auth import BasicAuthProvider
+from ditto_client._types import CmdState
 from ditto_client.cli._devops import devops_app
+from ditto_client.cli._output import output_json, output_message, output_table
 from ditto_client.cli._permission import permission_app
 from ditto_client.cli._policy import policy_app
 from ditto_client.cli._search import search_app
@@ -69,35 +68,46 @@ def _create_ba_ditto_client() -> DittoClient:
 
 
 @cli_app.command()
-def whoami() -> None:
+def whoami(
+    ctx: Context,
+) -> None:
     """Get current user information."""
-
-    client = _create_ba_ditto_client()
+    state = ctx.obj
+    use_table = state.table
 
     async def _run() -> None:
-        response = await client.api.two.whoami.get()
+        response = await state.client.api.two.whoami.get()
 
         if not response:
-            rprint("[red]Failed to get user information[/red]")
+            output_message("Failed to get user information", level="error")
             return
 
-        # Create a table for better display
-        table = Table(title="Current User Information")
-        table.add_column("Property", justify="right", style="cyan", no_wrap=True)
-        table.add_column("Value", justify="left", style="green")
-
-        table.add_row("Default Subject", response.default_subject or "N/A")
-        table.add_row("Subjects", ", ".join(response.subjects) if response.subjects else "None")
-
-        console = Console()
-        console.print(table)
+        if use_table:
+            output_table(
+                title="Current User Information",
+                columns=[
+                    ("Property", "right", "cyan"),
+                    ("Value", "left", "green"),
+                ],
+                rows=[
+                    ["Default Subject", response.default_subject or "N/A"],
+                    ["Subjects", ", ".join(response.subjects) if response.subjects else "None"],
+                ],
+            )
+        else:
+            output_json(
+                {
+                    "default_subject": response.default_subject,
+                    "subjects": response.subjects or [],
+                },
+            )
 
     asyncio.run(_run())
 
 
 @cli_app.callback()
 def main(
-    ctx: typer.Context,
+    ctx: Context,
     loglevel: Annotated[
         str,
         typer.Option(
@@ -106,12 +116,23 @@ def main(
             help="Set the logging level (debug, info, warning, error, critical)",
         ),
     ] = "warning",
+    table: Annotated[
+        bool,
+        typer.Option(
+            "--table",
+            help="Output results as a rich table instead of JSON",
+        ),
+    ] = False,
 ) -> None:
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("ditto_client").setLevel(LOG_LEVELS.get(loglevel, logging.WARNING))
 
+    ctx.ensure_object(CmdState)
+    ctx.obj = CmdState()
+    ctx.obj.table = table
+
     # create Ditto Clients based on the command types
     if ctx.invoked_subcommand == "devops":
-        ctx.obj = _create_ba_devops_client()
+        ctx.obj.client = _create_ba_devops_client()
     else:
-        ctx.obj = _create_ba_ditto_client()
+        ctx.obj.client = _create_ba_ditto_client()

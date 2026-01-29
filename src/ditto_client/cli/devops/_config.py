@@ -1,28 +1,24 @@
 import asyncio
-from typing import cast
 
-import typer
-from rich import print as rprint
-from typer import Typer
+from typer import Context, Typer
 
-from ditto_client.generated.ditto_client import DittoClient
+from ditto_client.cli._output import model_to_dict, output_json, output_message
 
 config_app = Typer()
 
 
 @config_app.command()
-def get(ctx: typer.Context) -> None:
+def get(ctx: Context) -> None:
     """Get configuration from Ditto services."""
-
-    client = cast(DittoClient, ctx.obj)
+    state = ctx.obj
 
     async def _run() -> None:
-        response = await client.devops.config.get()
+        response = await state.client.devops.config.get()
 
         if not response:
-            rprint("[yellow]No configuration found[/yellow]")
+            output_message("No configuration found", level="warning")
             return
 
-        rprint(response)
+        output_json(model_to_dict(response))
 
     asyncio.run(_run())

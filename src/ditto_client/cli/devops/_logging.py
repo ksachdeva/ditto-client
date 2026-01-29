@@ -1,15 +1,14 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Optional, cast
+from typing import Annotated
 
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
-from rich import print as rprint
-from typer import Typer
+from typer import Context, Typer
 
+from ditto_client.cli._output import model_to_dict, output_json, output_message
 from ditto_client.generated.devops.logging.logging_request_builder import LoggingRequestBuilder
-from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.logging_update_fields import LoggingUpdateFields
 from ditto_client.generated.models.module import Module
 from ditto_client.generated.models.module_updated_log_level import ModuleUpdatedLogLevel
@@ -21,42 +20,41 @@ logging_app = Typer()
 
 @logging_app.command()
 def get(
-    ctx: typer.Context,
-    module_name: Annotated[Optional[str], typer.Option(help="Module name to get logging config for")] = None,
+    ctx: Context,
+    module_name: Annotated[str | None, typer.Option(help="Module name to get logging config for")] = None,
 ) -> None:
     """Get logging configuration from Ditto services."""
-
-    client = cast(DittoClient, ctx.obj)
+    state = ctx.obj
 
     async def _run() -> None:
         response: Module | RetrieveLoggingConfig | None
 
         if module_name:
             # Get module-specific logging config
-            response = await client.devops.logging.by_module_name(module_name).get()
+            response = await state.client.devops.logging.by_module_name(module_name).get()
         else:
             # Get general logging config
             query_params = LoggingRequestBuilder.LoggingRequestBuilderGetQueryParameters()
             request_config = RequestConfiguration(query_parameters=query_params)
-            response = await client.devops.logging.get(request_configuration=request_config)
+            response = await state.client.devops.logging.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No logging configuration found[/yellow]")
+            output_message("No logging configuration found", level="warning")
             return
 
-        rprint(response)
+        output_json(model_to_dict(response))
 
     asyncio.run(_run())
 
 
 @logging_app.command()
 def update(
-    ctx: typer.Context,
+    ctx: Context,
     update_file: Annotated[Path, typer.Argument(help="Path to JSON file containing logging updates")],
-    module_name: Annotated[Optional[str], typer.Option(help="Module name to update logging config for")] = None,
+    module_name: Annotated[str | None, typer.Option(help="Module name to update logging config for")] = None,
 ) -> None:
     """Update logging configuration for Ditto services."""
-    client = cast(DittoClient, ctx.obj)
+    state = ctx.obj
 
     async def _run() -> None:
         # Read the logging update data
@@ -68,10 +66,10 @@ def update(
         response: ModuleUpdatedLogLevel | list[ResultUpdateRequest] | None
 
         if module_name:
-            response = await client.devops.logging.by_module_name(module_name).put(body=logging_update)
+            response = await state.client.devops.logging.by_module_name(module_name).put(body=logging_update)
         else:
-            response = await client.devops.logging.put(body=logging_update)
+            response = await state.client.devops.logging.put(body=logging_update)
 
-        rprint(response)
+        output_json(model_to_dict(response))
 
     asyncio.run(_run())

@@ -1,18 +1,21 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, Any, Optional, cast
+from typing import Annotated, Any, cast
 
 import jsonpatch
 import typer
 from kiota_abstractions.base_request_configuration import RequestConfiguration
-from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
-from typer import Typer
+from typer import Context, Typer
 
+from ditto_client._types import CmdState
+from ditto_client.cli._output import (
+    model_to_dict,
+    output_json,
+    output_message,
+    output_table,
+)
 from ditto_client.generated.api.two.things.things_request_builder import ThingsRequestBuilder
-from ditto_client.generated.ditto_client import DittoClient
 from ditto_client.generated.models.new_thing import NewThing
 from ditto_client.generated.models.patch_thing import PatchThing
 from ditto_client.generated.models.thing import Thing
@@ -22,12 +25,12 @@ thing_app = Typer()
 
 @thing_app.command()
 def create(
-    ctx: typer.Context,
+    ctx: Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to create")],
     data_file: Annotated[Path, typer.Argument(help="Path to JSON file containing thing additional data")],
 ) -> None:
     """Create a new thing."""
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
 
     async def _run() -> None:
         # Build the thing data
@@ -36,26 +39,29 @@ def create(
         # Create the new thing
         new_thing = NewThing(additional_data=thing_data)
 
-        await client.api.two.things.by_thing_id(thing_id).put(body=new_thing)
-        rprint(f"[green]Successfully created thing '{thing_id}'[/green]")
+        await state.client.api.two.things.by_thing_id(thing_id).put(body=new_thing)
+        output_message(f"Successfully created thing '{thing_id}'", level="success")
 
     asyncio.run(_run())
 
 
 @thing_app.command()
 def list(
-    ctx: typer.Context,
+    ctx: Context,
     fields: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
-            "--fields", "-f", help="Comma-separated list of fields to include (e.g., 'thingId,attributes,features')"
+            "--fields",
+            "-f",
+            help="Comma-separated list of fields to include (e.g., 'thingId,attributes,features')",
         ),
     ] = None,
-    ids: Annotated[Optional[str], typer.Option(help="Comma-separated list of thing IDs to retrieve")] = None,
-    timeout: Annotated[Optional[str], typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
+    ids: Annotated[str | None, typer.Option(help="Comma-separated list of thing IDs to retrieve")] = None,
+    timeout: Annotated[str | None, typer.Option(help="Request timeout (e.g., '30s', '1m')")] = None,
 ) -> None:
     """List things from Ditto."""
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
+    use_table = state.table
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -71,38 +77,45 @@ def list(
 
             request_config = RequestConfiguration(query_parameters=query_params)
 
-        response = await client.api.two.things.get(request_configuration=request_config)
+        response = await state.client.api.two.things.get(request_configuration=request_config)
 
         if not response:
-            rprint("[yellow]No things found[/yellow]")
+            if use_table:
+                output_message("No things found", level="warning")
+            else:
+                output_json([])
             return
 
-        # Create a table for better display
-        table = Table(title="Ditto Things")
-        table.add_column("Thing ID", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Features", justify="center", style="yellow")
+        if use_table:
+            rows = []
+            for thing in response:
+                features_count = (
+                    len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
+                )
+                rows.append([thing.thing_id or "", str(features_count)])
 
-        for thing in response:
-            # Features is a Features object, not a dict, so we need to check if it has any data
-            features_count = (
-                len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
+            output_table(
+                title="Ditto Things",
+                columns=[
+                    ("Thing ID", "left", "cyan"),
+                    ("Features", "center", "yellow"),
+                ],
+                rows=rows,
             )
-            table.add_row(thing.thing_id, str(features_count))
-
-        console = Console()
-        console.print(table)
+        else:
+            output_json([model_to_dict(thing) for thing in response])
 
     asyncio.run(_run())
 
 
 @thing_app.command()
 def get(
-    ctx: typer.Context,
+    ctx: Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to retrieve")],
-    revision: Annotated[Optional[int], typer.Option(help="Historical revision number to retrieve")] = None,
+    revision: Annotated[int | None, typer.Option(help="Historical revision number to retrieve")] = None,
 ) -> None:
     """Get a specific thing by ID."""
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
 
     async def _run() -> None:
         # Build request configuration with custom headers if revision is specified
@@ -111,25 +124,25 @@ def get(
             request_config = RequestConfiguration()
             request_config.headers.add("at-historical-revision", str(revision))
 
-        response = await client.api.two.things.by_thing_id(thing_id).get(request_configuration=request_config)
+        response = await state.client.api.two.things.by_thing_id(thing_id).get(request_configuration=request_config)
 
         if not response:
-            rprint(f"[red]Thing '{thing_id}' not found[/red]")
+            output_message(f"Thing '{thing_id}' not found", level="error")
             return
 
-        rprint(response)
+        output_json(model_to_dict(response))
 
     asyncio.run(_run())
 
 
 @thing_app.command()
 def update(
-    ctx: typer.Context,
+    ctx: Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to update")],
     patch_file: Annotated[Path, typer.Argument(help="Path to JSON patch file")],
 ) -> None:
     """Update a thing using JSON patch."""
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
 
     async def _run() -> None:
         # Read the patch data
@@ -138,15 +151,15 @@ def update(
         # Create the patch thing
         patch_thing = PatchThing(additional_data=patch_data)
 
-        await client.api.two.things.by_thing_id(thing_id).patch(body=patch_thing)
-        rprint(f"[green]Successfully updated thing '{thing_id}'[/green]")
+        await state.client.api.two.things.by_thing_id(thing_id).patch(body=patch_thing)
+        output_message(f"Successfully updated thing '{thing_id}'", level="success")
 
     asyncio.run(_run())
 
 
 @thing_app.command()
 def diff(
-    ctx: typer.Context,
+    ctx: Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to compare")],
     revision: Annotated[int, typer.Argument(help="Historical revision number to compare with current")],
 ) -> None:
@@ -166,24 +179,24 @@ def diff(
 
         return extracted
 
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
 
     async def _run() -> None:
         # Get current thing
-        current_response = await client.api.two.things.by_thing_id(thing_id).get()
+        current_response = await state.client.api.two.things.by_thing_id(thing_id).get()
         if not current_response:
-            rprint(f"[red]Thing '{thing_id}' not found[/red]")
+            output_message(f"Thing '{thing_id}' not found", level="error")
             return
 
         # Get historical revision
         request_config: RequestConfiguration[Any] = RequestConfiguration()
         request_config.headers.add("at-historical-revision", str(revision))
 
-        historical_response = await client.api.two.things.by_thing_id(thing_id).get(
-            request_configuration=request_config
+        historical_response = await state.client.api.two.things.by_thing_id(thing_id).get(
+            request_configuration=request_config,
         )
         if not historical_response:
-            rprint(f"[red]Thing '{thing_id}' revision {revision} not found[/red]")
+            output_message(f"Thing '{thing_id}' revision {revision} not found", level="error")
             return
 
         # Extract features and attributes
@@ -198,31 +211,29 @@ def diff(
         patch = jsonpatch.make_patch(historical_json, current_json)
 
         if not patch:
-            rprint(f"[green]No differences found between current thing and revision {revision}[/green]")
+            output_json({"diff": [], "message": f"No differences found between current thing and revision {revision}"})
         else:
-            rprint(f"[cyan]Differences between revision {revision} and current state of '{thing_id}':[/cyan]")
-            rprint(patch)
+            output_json({"diff": [model_to_dict(op) for op in patch]})
 
     asyncio.run(_run())
 
 
 @thing_app.command()
 def delete(
-    ctx: typer.Context,
+    ctx: Context,
     thing_id: Annotated[str, typer.Argument(help="The ID of the thing to delete")],
     confirm: Annotated[bool, typer.Option(help="Skip confirmation prompt")] = False,
 ) -> None:
     """Delete a thing."""
-
     if not confirm:
         if not typer.confirm(f"Are you sure you want to delete thing '{thing_id}'?"):
-            rprint("[yellow]Operation cancelled[/yellow]")
+            output_message("Operation cancelled", level="warning")
             return
 
-    client = cast(DittoClient, ctx.obj)
+    state = cast(CmdState, ctx.obj)
 
     async def _run() -> None:
-        await client.api.two.things.by_thing_id(thing_id).delete()
-        rprint(f"[green]Successfully deleted thing '{thing_id}'[/green]")
+        await state.client.api.two.things.by_thing_id(thing_id).delete()
+        output_message(f"Successfully deleted thing '{thing_id}'", level="success")
 
     asyncio.run(_run())

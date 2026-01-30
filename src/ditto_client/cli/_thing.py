@@ -13,7 +13,6 @@ from ditto_client.cli._output import (
     model_to_dict,
     output_json,
     output_message,
-    output_table,
 )
 from ditto_client.generated.api.two.things.things_request_builder import ThingsRequestBuilder
 from ditto_client.generated.models.new_thing import NewThing
@@ -61,7 +60,6 @@ def list(
 ) -> None:
     """List things from Ditto."""
     state = cast(CmdState, ctx.obj)
-    use_table = state.table
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -80,30 +78,10 @@ def list(
         response = await state.client.api.two.things.get(request_configuration=request_config)
 
         if not response:
-            if use_table:
-                output_message("No things found", level="warning")
-            else:
-                output_json([])
+            output_json([])
             return
 
-        if use_table:
-            rows = []
-            for thing in response:
-                features_count = (
-                    len(thing.features.additional_data) if thing.features and thing.features.additional_data else 0
-                )
-                rows.append([thing.thing_id or "", str(features_count)])
-
-            output_table(
-                title="Ditto Things",
-                columns=[
-                    ("Thing ID", "left", "cyan"),
-                    ("Features", "center", "yellow"),
-                ],
-                rows=rows,
-            )
-        else:
-            output_json([model_to_dict(thing) for thing in response])
+        output_json([model_to_dict(thing) for thing in response])
 
     asyncio.run(_run())
 

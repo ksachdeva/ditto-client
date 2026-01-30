@@ -12,7 +12,7 @@ from ditto_client import __version__
 from ditto_client._basic_auth import BasicAuthProvider
 from ditto_client._types import CmdState
 from ditto_client.cli._devops import devops_app
-from ditto_client.cli._output import output_json, output_message, output_table
+from ditto_client.cli._output import output_json, output_message
 from ditto_client.cli._permission import permission_app
 from ditto_client.cli._policy import policy_app
 from ditto_client.cli._search import search_app
@@ -73,7 +73,6 @@ def whoami(
 ) -> None:
     """Get current user information."""
     state = cast(CmdState, ctx.obj)
-    use_table = state.table
 
     async def _run() -> None:
         response = await state.client.api.two.whoami.get()
@@ -82,25 +81,12 @@ def whoami(
             output_message("Failed to get user information", level="error")
             return
 
-        if use_table:
-            output_table(
-                title="Current User Information",
-                columns=[
-                    ("Property", "right", "cyan"),
-                    ("Value", "left", "green"),
-                ],
-                rows=[
-                    ["Default Subject", response.default_subject or "N/A"],
-                    ["Subjects", ", ".join(response.subjects) if response.subjects else "None"],
-                ],
-            )
-        else:
-            output_json(
-                {
-                    "default_subject": response.default_subject,
-                    "subjects": response.subjects or [],
-                },
-            )
+        output_json(
+            {
+                "default_subject": response.default_subject,
+                "subjects": response.subjects or [],
+            },
+        )
 
     asyncio.run(_run())
 
@@ -116,20 +102,12 @@ def main(
             help="Set the logging level (debug, info, warning, error, critical)",
         ),
     ] = "warning",
-    table: Annotated[
-        bool,
-        typer.Option(
-            "--table",
-            help="Output results as a rich table instead of JSON",
-        ),
-    ] = False,
 ) -> None:
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("ditto_client").setLevel(LOG_LEVELS.get(loglevel, logging.WARNING))
 
     ctx.ensure_object(CmdState)
     ctx.obj = CmdState()
-    ctx.obj.table = table
 
     # create Ditto Clients based on the command types
     if ctx.invoked_subcommand == "devops":

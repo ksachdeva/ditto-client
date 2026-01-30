@@ -6,7 +6,6 @@ class CmdState:
 
     def __init__(self) -> None:
         self._client: DittoClient | None = None
-        self._table: bool = False
 
     @property
     def client(self) -> DittoClient:
@@ -19,13 +18,3 @@ class CmdState:
     def client(self, value: DittoClient) -> None:
         """Set Ditto client."""
         self._client = value
-
-    @property
-    def table(self) -> bool:
-        """Get table output flag."""
-        return self._table
-
-    @table.setter
-    def table(self, value: bool) -> None:
-        """Set table output flag."""
-        self._table = value

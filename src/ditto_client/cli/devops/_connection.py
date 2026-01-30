@@ -11,7 +11,6 @@ from ditto_client._types import CmdState
 from ditto_client.cli._output import (
     output_json,
     output_message,
-    output_table,
 )
 from ditto_client.generated.api.two.connections.connections_request_builder import ConnectionsRequestBuilder
 from ditto_client.generated.api.two.connections.item.with_connection_item_request_builder import (
@@ -70,7 +69,6 @@ def list(
 ) -> None:
     """List connections from Ditto."""
     state = cast(CmdState, ctx.obj)
-    use_table = state.table
 
     async def _run() -> None:
         # Build query parameters if provided
@@ -85,36 +83,10 @@ def list(
         response = await state.client.api.two.connections.get(request_configuration=request_config)
 
         if not response:
-            if use_table:
-                output_message("No connections found", level="warning")
-            else:
-                output_json([])
+            output_json([])
             return
 
-        if use_table:
-            rows = []
-            for connection in response:
-                rows.append(
-                    [
-                        connection.id or "",
-                        connection.connection_status or "",
-                        connection.connection_type or "",
-                        connection.uri or "N/A",
-                    ],
-                )
-
-            output_table(
-                title="Ditto Connections",
-                columns=[
-                    ("Connection ID", "left", "cyan"),
-                    ("Status", "center", "green"),
-                    ("Type", "center", "yellow"),
-                    ("URI", "left", "blue"),
-                ],
-                rows=rows,
-            )
-        else:
-            output_json([_connection_to_dict(connection) for connection in response])
+        output_json([_connection_to_dict(connection) for connection in response])
 
     asyncio.run(_run())
 

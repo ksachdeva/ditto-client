@@ -1,0 +1,119 @@
+{
+  "policyId": "my.sensors:sensor-policy",
+  "attributes": {
+    "type": "camera",
+    "version": 3,
+    "status": true,
+    "location": "Kitchen",
+    "manufacturer": "Acme Corp",
+    "timestamp": "2026-01-15T06:03:34.002+00:00Z"
+  },
+  "features": {
+    "video": {
+      "properties": {
+        "url": "https://www.trashloop.com/",
+        "resolution": "720p",
+        "codec": "H.265",
+        "frameRate": 120,
+        "streaming": true,
+        "nightVision": false,
+        "supportedResolutions": [
+          "720p",
+          "1080p",
+          "4K"
+        ]
+      }
+    },
+    "motionDetection": {
+      "properties": {
+        "enabled": false,
+        "sensitivityLevel": 5,
+        "zone": {
+          "id": "zone-3",
+          "x": 0.6,
+          "y": 0.1,
+          "width": 0.3,
+          "height": 0.3
+        },
+        "lastDetection": {
+          "timestamp": "2026-01-12T09:27:19.952+00:00Z",
+          "confidence": 0.95,
+          "type": "human"
+        }
+      }
+    },
+    "storage": {
+      "properties": {
+        "type": "microSD",
+        "capacityGB": 64,
+        "usedSpaceGB": 20,
+        "recordingMode": "continuous",
+        "overwrite": false
+      }
+    },
+    "network": {
+      "properties": {
+        "ip": "192.168.249.208",
+        "mac": "00:1B:44:11:3A:B7",
+        "signalStrength": 75,
+        "connected": true,
+        "connectionType": "Ethernet"
+      }
+    },
+    "health": {
+      "properties": {
+        "uptimeSeconds": 166193,
+        "temperatureC": 35.4,
+        "cpuLoad": 56.8,
+        "lastReboot": "2025-07-21T10:12:44Z",
+        "errors": "None"
+      }
+    },
+    "firmware": {
+      "properties": {
+        "version": "v1.2.9-beta",
+        "lastUpdate": "2025-03-21T11:12:49Z",
+        "availableUpdate": {
+          "version": "v1.3.1",
+          "releaseDate": "2025-07-20",
+          "changelog": "Stream stability fixes"
+        }
+      }
+    },
+    "analytics": {
+      "properties": {
+        "facesDetected": 23,
+        "peopleCount": {
+          "lastHour": 4,
+          "today": 3
+        },
+        "intrusionEvents": [
+          {
+            "timestamp": "2026-01-12T13:36:39.287+00:00Z",
+            "zone": {
+              "id": "zone-4"
+            }
+          },
+          {
+            "timestamp": "2026-01-08T17:34:15.250+00:00Z",
+            "zone": {
+              "id": "zone-5"
+            }
+          },
+          {
+            "timestamp": "2026-01-11T16:59:10.627+00:00Z",
+            "zone": {
+              "id": "zone-1"
+            }
+          },
+          {
+            "timestamp": "2026-01-13T14:52:33.423+00:00Z",
+            "zone": {
+              "id": "zone-3"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

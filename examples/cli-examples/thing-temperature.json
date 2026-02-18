@@ -1,0 +1,15 @@
+{
+    "policyId": "my.sensors:sensor-policy",
+    "attributes": {
+        "location": "Living Room",
+        "type": "temperature-sensor"
+    },
+    "features": {
+        "temperature": {
+            "properties": {
+                "value": 22.5,
+                "unit": "Celsius"
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "policyId": "my.sensors:sensor-policy",
+    "attributes": {
+        "location": "Kitchen",
+        "manufacturer": "ABC Sensors",
+        "model": "ENV-201",
+        "serialNumber": "SN-2025-1234",
+        "installationDate": "2025-03-15"
+    },
+    "features": {
+        "humidity": {
+            "properties": {
+                "value": 65.2,
+                "min": 30.0,
+                "max": 80.0,
+                "unit": "Percentage",
+                "timestamp": "2025-07-22T09:10:00Z"
+            }
+        },
+        "temperature": {
+            "properties": {
+                "value": 23.5,
+                "unit": "Celsius"
+            }
+        },
+        "battery": {
+            "properties": {
+                "level": 87,
+                "status": "good",
+                "lastCharged": "2026-01-10"
+            }
+        }
+    }
+}

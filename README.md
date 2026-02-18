@@ -106,7 +106,7 @@ ditto-client policy delete "my.sensors:sensor-policy"
 ```bash
 # Make sure to create the policy (my.sensors:sensor-policy) See above example
 # Create a new thing
-ditto-client thing create "my.sensors:sensor-001" examples/cli-examples/thing.json
+ditto-client thing create "my.sensors:sensor-001" examples/cli-examples/thing-humidity.json
 ```
 
 #### List all things with optional filtering.
@@ -136,7 +136,7 @@ ditto-client thing get "my.sensors:sensor-001" --revision 1
 
 ```bash
 # Update a thing
-ditto-client thing update "my.sensors:sensor-001" examples/cli-examples/thing.json
+ditto-client thing update "my.sensors:sensor-001" examples/cli-examples/thing-humidity.json
 ```
 
 #### Compare current thing with historical revision.

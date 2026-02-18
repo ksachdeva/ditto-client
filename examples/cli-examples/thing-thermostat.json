@@ -1,0 +1,60 @@
+{
+    "policyId": "my.sensors:sensor-policy",
+    "attributes": {
+        "location": "Master Bedroom",
+        "manufacturer": "SmartHome Inc",
+        "model": "TH-2000",
+        "serialNumber": "SN-2024-0042",
+        "installationDate": "2024-01-15",
+        "firmware": {
+            "version": "2.3.1",
+            "lastUpdated": "2025-12-10"
+        },
+        "connectivity": {
+            "protocol": "WiFi",
+            "signalStrength": -45
+        }
+    },
+    "features": {
+        "temperature": {
+            "properties": {
+                "current": 21.8,
+                "target": 22.0,
+                "unit": "Celsius",
+                "accuracy": 0.1
+            }
+        },
+        "humidity": {
+            "properties": {
+                "current": 55.3,
+                "target": 50.0,
+                "unit": "Percentage",
+                "timestamp": "2026-02-18T10:30:00Z"
+            }
+        },
+        "hvac": {
+            "properties": {
+                "mode": "heat",
+                "fanSpeed": "auto",
+                "status": "heating",
+                "powerConsumption": 850
+            }
+        },
+        "schedule": {
+            "properties": {
+                "enabled": true,
+                "weekdayTemp": 22.0,
+                "weekendTemp": 23.0,
+                "nightTemp": 19.0
+            }
+        },
+        "diagnostics": {
+            "properties": {
+                "lastMaintenance": "2025-11-01",
+                "operatingHours": 8760,
+                "errorCount": 0,
+                "warnings": []
+            }
+        }
+    }
+}

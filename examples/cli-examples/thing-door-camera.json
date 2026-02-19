@@ -1,0 +1,60 @@
+{
+    "policyId": "my.sensors:sensor-policy",
+    "attributes": {
+        "location": "Front Door",
+        "manufacturer": "SecureTech",
+        "model": "CAM-5000-PRO",
+        "serialNumber": "CAM-2025-7823",
+        "installationDate": "2025-06-20",
+        "capabilities": ["night-vision", "motion-detection", "two-way-audio", "facial-recognition"],
+        "network": {
+            "ipAddress": "192.168.1.105",
+            "macAddress": "00:1A:2B:3C:4D:5E",
+            "subnet": "255.255.255.0"
+        }
+    },
+    "features": {
+        "camera": {
+            "properties": {
+                "resolution": "4K",
+                "fps": 30,
+                "zoom": 4.0,
+                "nightVisionEnabled": true,
+                "fieldOfView": 120
+            }
+        },
+        "motion": {
+            "properties": {
+                "detectionEnabled": true,
+                "sensitivity": 7,
+                "zones": ["entrance", "driveway"],
+                "lastDetection": "2026-02-18T08:45:22Z"
+            }
+        },
+        "audio": {
+            "properties": {
+                "microphoneEnabled": true,
+                "speakerEnabled": true,
+                "volume": 75,
+                "noiseReduction": true
+            }
+        },
+        "storage": {
+            "properties": {
+                "type": "cloud",
+                "capacity": 500,
+                "used": 342,
+                "unit": "GB",
+                "recordingDays": 30
+            }
+        },
+        "alerts": {
+            "properties": {
+                "emailEnabled": true,
+                "pushEnabled": true,
+                "smsEnabled": false,
+                "recipients": ["admin@example.com"]
+            }
+        }
+    }
+}

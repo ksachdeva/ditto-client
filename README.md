@@ -14,12 +14,15 @@ uv add ditto-client
 
 A sample docker compose is provided as part of this repository.
 
-You must run the ditto services outside the devcontainer as they consume lot of resources.
+```bash
+# to start nginx reverse proxy based setup
+# default username/password are ditto / ditto
+uv run poe compose-nginx-up
+```
 
 ```bash
-# outside your devcontainer (i.e. on your host)
-# at <your_path>/ditto-client dir
-docker compose -f assets/ditto/docker-compose.yaml up
+# to stop nginx reverse proxy based setup
+uv run poe compose-nginx-down
 ```
 
 ## Usage

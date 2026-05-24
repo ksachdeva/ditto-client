@@ -110,3 +110,13 @@ exclude = ["src/ditto_client/generated"]
 [tool.poe.tasks.generate-kiota-client]
 help = "Generate the client code using Kiota"
 cmd = "docker run --rm -v $PWD/src/ditto_client/generated:/app/output -v $PWD/assets/ditto/openapi/ditto-api-2.yml:/app/openapi.yaml mcr.microsoft.com/openapi/kiota generate -l python -c DittoClient --clear-cache --clean-output"
+
+[tool.poe.tasks.compose-nginx-up]
+help = "Run the ditto with nginx as reverse proxy"
+env = { DITTO_VERSION = "3.8.12" }
+cmd = "docker compose -f assets/ditto/docker-compose.yaml up -d --wait --remove-orphans"
+
+[tool.poe.tasks.compose-nginx-down]
+help = "Stop the ditto with nginx as reverse proxy"
+env = { DITTO_VERSION = "3.8.12" }
+cmd = "docker compose -f assets/ditto/docker-compose.yaml down -v --remove-orphans"

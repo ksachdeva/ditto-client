@@ -1,4 +1,14 @@
+from enum import StrEnum
+
 from ditto_client.generated.ditto_client import DittoClient
+
+
+class DittoAuthType(StrEnum):
+    """Authentication types supported by Ditto client."""
+
+    BASIC = "basic"
+    PRE_AUTH = "pre-auth"
+    JWT = "jwt"
 
 
 class CmdState:
@@ -7,6 +17,12 @@ class CmdState:
     def __init__(self) -> None:
         self._client: DittoClient | None = None
         self._table: bool = False
+        self._auth_type: DittoAuthType = DittoAuthType.BASIC
+
+    @property
+    def auth_type(self) -> DittoAuthType:
+        """Get authentication type."""
+        return self._auth_type
 
     @property
     def client(self) -> DittoClient:

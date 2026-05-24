@@ -1,3 +1,6 @@
+include:
+  - ditto-services.yml
+
 services:
 
   gateway:

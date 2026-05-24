@@ -19,15 +19,6 @@ There are 3 modes in which you can run Eclipse Ditto from this repository
 A docker compose that has `nginx` as a reverse proxy and configured to do Basic Authentication.
 
 ```bash
-# environment variables
-DITTO_BASE_URL=http://host.docker.internal:8080
-DITTO_USERNAME=ditto
-DITTO_PASSWORD=ditto
-DITTO_DEVOPS_USERNAME=devops
-DITTO_DEVOPS_PASSWORD=foobar
-```
-
-```bash
 # to start nginx reverse proxy based setup (that uses Basic Authentication)
 uv run poe compose-ba-up
 ```
@@ -42,14 +33,6 @@ uv run poe compose-ba-down
 A docker compose that exposes the Eclipse Ditto Gateway at port 8081 and sets ENABLE_PRE_AUTHENTICATION=true
 
 In this mode, the client application directly talks to the gateway and sets the header
-
-```bash
-# environment variables
-DITTO_BASE_URL=http://host.docker.internal:8081
-
-DITTO_AUTH_SUBJECT=nginx:ditto
-DITTO_DEVOPS_AUTH_SUBJECT=nginx:ditto
-```
 
 ```bash
 # to start with out nginx and pre-auth setup
@@ -69,13 +52,6 @@ and requires JWT based authentication
 In this mode, the client application first gets the JWT token from the issuer and then pass it to the gateway
 
 > Look at assets/ditto/ditto-gateway-jwt.yml to learn about the settings (A mock oauth server is included)
-
-```bash
-# environment variables
-DITTO_BASE_URL=http://host.docker.internal:8081
-
-DITTO_JWT_TOKEN=
-```
 
 ```bash
 # to start with out nginx and pre-auth setup
@@ -124,9 +100,9 @@ response = await ditto_client.api.two.things.get()
 A custom authentication provider has been included. See [PreAuth Provider](src/ditto_client/pre.py).
 
 [See examples/pre.py for the full usage](examples/pre.py)
-```
 
-***JWT Authentication**
+
+**JWT Authentication**
 
 ```python
 auth_provider = JWTAuthProvider(token=<your_token>")
@@ -143,7 +119,7 @@ response = await ditto_client.api.two.things.get()
 A custom authentication provider has been included. See [JWTAuth Provider](src/ditto_client/jwt.py).
 
 [See examples/jwt.py for the full usage](examples/jwt.py)
-```
+
 
 ## Usage - CLI
 
@@ -160,28 +136,9 @@ The Ditto client includes a comprehensive CLI for interacting with Eclipse Ditto
 
 ### Global Configuration
 
-The CLI uses the following environment variables, you can set it as per your environment:
+You can pass various secrets on the command line and/or use the `.env` file.
 
-```bash
-# When using nginx based reverse proxy & Basic Authentication
-export DITTO_BASE_URL="http://host.docker.internal:8080"
-
-export DITTO_USERNAME="ditto"
-export DITTO_PASSWORD="ditto"
-export DITTO_DEVOPS_USERNAME="devops"
-export DITTO_DEVOPS_PASSWORD="foobar"
-
-# When using pre-auth and directly talking to Eclipse Ditto Gateway
-export DITTO_BASE_URL="http://host.docker.internal:8081"
-
-export DITTO_AUTH_SUBJECT=nginx:ditto
-export DITTO_DEVOPS_AUTH_SUBJECT=nginx:ditto
-
-# When using jwt auth and directly talking to Eclipse Ditto Gateway
-export DITTO_BASE_URL="http://host.docker.internal:8081"
-
-export DITTO_JWT_TOKEN=
-```
+See `.env.example` for the entries
 
 ---
 

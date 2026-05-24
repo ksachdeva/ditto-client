@@ -125,14 +125,33 @@ A custom authentication provider has been included. See [JWTAuth Provider](src/d
 
 The Ditto client includes a comprehensive CLI for interacting with Eclipse Ditto services. The CLI provides the following commands:
 
-| Command Group | Description                                     |
-| ------------- | ----------------------------------------------- |
-| `policy`      | Manage access policies                          |
-| `thing`       | Manage things (digital twins)                   |
-| `search`      | Search for things                               |
-| `permission`  | Check permissions                               |
-| `devops`      | DevOps operations (logging, config, connection) |
+```markdown
+ Usage: ditto-client [OPTIONS] COMMAND [ARGS]...
 
+╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --loglevel            -l      TEXT                  Set the logging level (debug, info, warning, error, critical) [default: warning]                                        │
+│ --base-url                    TEXT                  Base URL for the Ditto API (can also be set via DITTO_BASE_URL environment variable) [env var: DITTO_BASE_URL]          │
+│                                                     [default: http://host.docker.internal:8080]                                                                             │
+│ --auth-type                   [basic|pre-auth|jwt]  Set the authentication type (basic, pre-auth) [default: basic]                                                          │
+│ --username                    TEXT                  Username for basic authentication (can also be set via DITTO_USERNAME environment variable) [env var: DITTO_USERNAME]   │
+│ --password                    TEXT                  Password for basic authentication (can also be set via DITTO_PASSWORD environment variable) [env var: DITTO_PASSWORD]   │
+│ --preauth-subject             TEXT                  Auth subject for pre-authentication (can also be set via DITTO_PREAUTH_SUBJECT environment variable)                    │
+│                                                     [env var: DITTO_PREAUTH_SUBJECT]                                                                                        │
+│ --jwt-token                   TEXT                  JWT token for authentication (can also be set via DITTO_JWT_TOKEN environment variable) [env var: DITTO_JWT_TOKEN]      │
+│ --table                                             Output results as a rich table instead of JSON                                                                          │
+│ --install-completion                                Install completion for the current shell.                                                                               │
+│ --show-completion                                   Show completion for the current shell, to copy it or customize the installation.                                        │
+│ --help                                              Show this message and exit.                                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ whoami       Get current user information.                                                                                                                                  │
+│ policy       Policy management                                                                                                                                              │
+│ thing        Thing management                                                                                                                                               │
+│ search       Thing search                                                                                                                                                   │
+│ permission   Permission check                                                                                                                                               │
+│ devops       DevOps                                                                                                                                                         │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 ### Global Configuration
 
